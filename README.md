@@ -1,4 +1,4 @@
-## quant-opts (work in progress)
+## quant-opts (0.1.0)
 
 [![Coverage](https://codecov.io/gh/day01/quant-opts/branch/main/graph/badge.svg)](https://codecov.io/gh/day01/quant-opts)
 
@@ -64,7 +64,7 @@ feature to get simple function-style helpers:
 
 ```toml
 [dependencies]
-quant-opts = { version = "0.24", features = ["wrappers"] }
+quant-opts = { version = "0.1.0", features = ["wrappers"] }
 ```
 
 ```rust
@@ -99,10 +99,39 @@ Up-to-date baseline numbers for pricing, Greeks and implied volatility are
 documented in `docs/baseline.md`. The CI and benchmarking setup is described
 in `docs/BENCHMARKING.md`.
 
+### Benchmark commands (no default features)
+
+- Micro pricing: `cargo bench --no-default-features --bench pricing`
+- Micro IV: `cargo bench --no-default-features --bench implied_volatility`
+- Micro Greeks: `cargo bench --no-default-features --bench greeks`
+- Single option sweeps: `cargo bench --no-default-features --bench single_option`
+- Single IV sweeps: `cargo bench --no-default-features --bench single_iv`
+- Single Greeks sweeps: `cargo bench --no-default-features --bench single_greeks`
+- Batch pricing: `cargo bench --no-default-features --bench batch_pricing`
+- Batch Greeks: `cargo bench --no-default-features --bench batch_greeks`
+- Throughput: `cargo bench --no-default-features --bench throughput`
+- Scaling study: `cargo bench --no-default-features --bench scaling`
+- Batch size study: `cargo bench --no-default-features --bench batch_size_study`
+
+## Examples
+
+Run the included examples with:
+
+- Pricing and Greeks: `cargo run --example pricing_and_greeks`
+- Implied volatility (rational solver): `cargo run --example implied_vol`
+- WASM bindings demo: install the target (`rustup target add wasm32-unknown-unknown`) and `wasm-bindgen-cli`, then build with `--features wasm-example --target wasm32-unknown-unknown --example wasm_api`; run `wasm-bindgen --target web --out-dir examples/wasm/pkg target/wasm32-unknown-unknown/debug/examples/wasm_api.wasm` and open `examples/wasm/index.html` via a local server. See `examples/wasm/README.md`.
+- WASM CLI (WASI): `rustup target add wasm32-wasip1` then `cargo build --target wasm32-wasip1 --example wasm_cli`; run with `wasmtime target/wasm32-wasip1/debug/examples/wasm_cli.wasm price --spot ...` (see `examples/wasm/README.md`).
+
+Make targets for wasm bindings (requires `wasm-pack`):
+- `make wasm-bindings` → builds web (`target/wasm/pkg-web`) and bundler (`target/wasm/pkg-react`) bindings
+
 ## Origin and credits
 
 This project started as a fork of the excellent [`blackscholes`](https://crates.io/crates/blackscholes) crate by [Hayden Rose](https://github.com/hayden4r4). Many thanks for the original implementation and design. The goal of `quant-opts` is to build on that foundation, extending model coverage and abstractions while preserving and further improving performance.
 
-## License
+## Metadata
 
-This project is licensed under the MIT License – see the `LICENSE.md` file for details.
+- Edition: 2024
+- MSRV: 1.91.1 (Rust toolchain pinned in `rust-toolchain.toml`)
+- License: MIT (see `LICENSE.md`)
+- Changelog: see `CHANGELOG.md`

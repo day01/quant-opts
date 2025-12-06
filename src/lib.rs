@@ -1,27 +1,30 @@
-//! This library provides an simple, lightweight, and efficient (though not heavily optimized) implementation of the Black-Scholes-Merton model for pricing European options.
+//! High-performance Black–Scholes–Merton primitives for pricing European vanilla options,
+//! computing Greeks, and implied volatility.
 //!
-//! Provides methods for pricing options, calculating implied volatility, and calculating the first, second, and third order Greeks.
-//!
-//! ### Example:
+//! ## Quick start
 //! ```
-//! use quant_opts::{BlackScholes, MarketData, OptionStyle, OptionType, VanillaOption};
+//! use quant_opts::{BlackScholes, MarketData, OptionStyle, OptionType, VanillaModel, VanillaOption};
 //!
-//! let option = VanillaOption::new(
-//!     OptionStyle::European,
-//!     OptionType::Call,
-//!     100.0,
-//!     20.0 / 365.25,
-//! );
-//! let market = MarketData::new(100.0, 0.05, 0.2);
-//! let price: f64 = BlackScholes::price(&option, &market, 0.2).unwrap();
+//! // Define an option and market snapshot
+//! let option = VanillaOption::new(OptionStyle::European, OptionType::Call, 100.0, 30.0 / 365.25);
+//! let market = MarketData::new(105.0, 0.03, 0.01);
+//! let sigma = 0.22;
+//!
+//! // Static API
+//! let price = BlackScholes::price(&option, &market, sigma).unwrap();
+//! let greeks = BlackScholes::greeks(&option, &market, sigma).unwrap();
+//!
+//! // Trait-based API
+//! let model = BlackScholes::new(sigma);
+//! let price_via_trait = model.price(&option, &market).unwrap();
+//! assert!((price - price_via_trait).abs() < 1e-12);
 //! ```
 //!
-//! Criterion benchmark can be ran by running:
-//! ```bash
-//! cargo bench
-//! ```
+//! More runnable examples live under `examples/`:
+//! - `cargo run --example pricing_and_greeks`
+//! - `cargo run --example implied_vol`
 //!
-//! See the [Github Repo](https://github.com/hayden4r4/blackscholes-rust/tree/master) for full source code.  Other implementations such as a [npm WASM package](https://www.npmjs.com/package/@haydenr4/blackscholes_wasm) and a [python module](https://pypi.org/project/blackscholes/) are also available.
+//! Benchmark commands are documented in `README.md` and `docs/BENCHMARKING.md`.
 
 pub mod core;
 pub mod models;
