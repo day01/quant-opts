@@ -11,5 +11,4 @@ allow = [
 allow-osi-fsf-free = "either"
 copyleft = "warn"
 unlicensed = "warn"
-unknown = "warn"
 confidence-threshold = 0.8

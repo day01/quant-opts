@@ -29,10 +29,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "build-${{ runner.os }}-${{ matrix.target }}"
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev
       - name: Install aarch64 cross toolchain
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross
@@ -52,10 +48,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev
       - name: Install Rust
         uses: dtolnay/rust-toolchain@nightly
         with:
@@ -71,10 +63,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev
       - name: Install Rust
         uses: dtolnay/rust-toolchain@nightly
       - name: Tests
@@ -111,10 +99,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev
       - name: Install Rust
         uses: dtolnay/rust-toolchain@nightly
       - name: Install cargo-llvm-cov
