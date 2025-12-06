@@ -26,6 +26,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "build-${{ runner.os }}-${{ matrix.target }}"
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -48,6 +51,7 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -66,6 +70,7 @@ jobs:
     needs: fmt_clippy
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -80,12 +85,17 @@ jobs:
     needs: fmt_clippy
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
       - name: Install Rust
         uses: dtolnay/rust-toolchain@nightly
       - name: Install cargo-audit
         run: cargo install cargo-audit
       - name: Run cargo-audit
         run: cargo audit
+      - name: Install cargo-deny
+        run: cargo install cargo-deny
+      - name: Run cargo-deny
+        run: cargo deny check
 
   coverage:
     runs-on: ubuntu-latest
@@ -96,6 +106,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -106,13 +117,28 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
       - name: Generate code coverage
         run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+      - name: Generate cobertura coverage
+        run: cargo llvm-cov --all-features --workspace --cobertura --output-path cobertura.xml
+      - name: Coverage summary
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: cobertura.xml
+          badge: true
+          format: markdown
+          output: both
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage-lcov
-          path: lcov.info
+          path: |
+            lcov.info
+            cobertura.xml
+            code-coverage-results.md
+            code-coverage-results.txt
           retention-days: 7
-      - name: Upload coverage to GitHub
-        uses: actions/upload-coverage@v4
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          path: lcov.info
+          files: lcov.info
+          fail_ci_if_error: true
+          use_oidc: true
