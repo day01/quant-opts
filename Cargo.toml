@@ -46,6 +46,8 @@ plotters = { version = "0.3", optional = true }
 
 [target.wasm32-unknown-unknown.dependencies]
 getrandom = { version = "0.3", features = ["std", "wasm_js"] }
+# Force wasm support on transitive rand 0.8 (statrs) which pulls getrandom 0.2
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
 
 [[bench]]
 name = "black"
