@@ -1,6 +1,6 @@
 ## quant-opts (work in progress)
 
-[![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/day01/quant-opts/github-code-coverage/main/badge.json)](https://github.com/day01/quant-opts/actions/workflows/rust.yml)
+[![Coverage](https://codecov.io/gh/day01/quant-opts/branch/main/graph/badge.svg)](https://codecov.io/gh/day01/quant-opts)
 
 A high-performance Rust library for option pricing and risk, starting from a fast Black–Scholes–Merton implementation and evolving towards a more general framework (e.g. SABR and other models).
 
