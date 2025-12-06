@@ -9,5 +9,9 @@ allow = [
     "ISC",
     "Zlib",
     "MPL-2.0",
+    "Unicode-DFS-2016",
 ]
 unused-allowed-license = "warn"
+
+[advisories]
+unmaintained = "workspace"
