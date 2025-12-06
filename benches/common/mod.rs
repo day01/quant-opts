@@ -1,7 +1,9 @@
 use quant_opts::{MarketData, OptionStyle, OptionType, VanillaOption};
-use rand::distr::{Distribution, Uniform};
-use rand::rngs::ThreadRng;
-use rand::Rng;
+use rand::{
+    distr::{Distribution, Uniform},
+    rngs::ThreadRng,
+    Rng,
+};
 
 /// Defines different option moneyness categories
 #[derive(Debug, Clone, Copy)]
