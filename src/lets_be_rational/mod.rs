@@ -2,9 +2,7 @@ use statrs::consts::SQRT_2PI;
 
 use crate::{lets_be_rational::black::normalised_black, OptionType};
 
-// NOTE: if black is public then `calc_rational_iv` is decreased to 320
-// ns but when private everything twice lower - wtf
-// if someone know why I will be glad to know too...
+// NOTE: black has to be private. If is public then `calc_rational_iv` is decreased benches dramatically.
 mod black;
 
 // For internal validation/benchmarks we sometimes need direct access to

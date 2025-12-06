@@ -84,9 +84,5 @@ fn bench_implied_volatility(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(
-    name = benches;
-    config = Criterion::default().with_plots();
-    targets = bench_implied_volatility
-);
+criterion_group!(benches, bench_implied_volatility);
 criterion_main!(benches);

@@ -75,9 +75,5 @@ fn bench_scaling(c: &mut Criterion) {
     println!("Benchmark completed. Use criterion's HTML reports for detailed analysis.");
 }
 
-criterion_group!(
-    name = benches;
-    config = Criterion::default().with_plots();
-    targets = bench_scaling
-);
+criterion_group!(benches, bench_scaling);
 criterion_main!(benches);

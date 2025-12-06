@@ -113,9 +113,7 @@ fn bench_batch_greeks(c: &mut Criterion) {
 
 criterion_group!(
     name = benches;
-    config = Criterion::default()
-        .with_plots()
-        .measurement_time(Duration::from_secs(10));
+    config = Criterion::default().measurement_time(Duration::from_secs(10));
     targets = bench_batch_greeks
 );
 criterion_main!(benches);

@@ -96,9 +96,5 @@ fn bench_option_pricing(c: &mut Criterion) {
 // Skip the d1d2 calculation benchmark since it's using a private function
 // We'll add a replacement that uses public functions later
 
-criterion_group!(
-    name = benches;
-    config = Criterion::default().with_plots();
-    targets = bench_option_pricing
-);
+criterion_group!(benches, bench_option_pricing);
 criterion_main!(benches);

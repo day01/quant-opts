@@ -114,9 +114,5 @@ fn bench_batch_size_scaling(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(
-    name = benches;
-    config = Criterion::default().with_plots();
-    targets = bench_batch_size_scaling
-);
+criterion_group!(benches, bench_batch_size_scaling);
 criterion_main!(benches);
