@@ -1,12 +1,12 @@
 use std::{hint::black_box, time::Duration};
 
-use criterion::{criterion_group, criterion_main, measurement::WallTime, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main, measurement::WallTime};
 use quant_opts::BlackScholes;
-use rand::thread_rng;
+use rand::rng;
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_random_inputs, get_sample_config, BatchSize, BenchCase, InputsSoA};
+use common::{BatchSize, BenchCase, InputsSoA, generate_random_inputs, get_sample_config};
 
 // Batch pricing benchmark - this is a placeholder for now
 // Later we'll implement optimized batch methods in the library
@@ -22,7 +22,7 @@ fn bench_batch_pricing(c: &mut Criterion) {
         (BatchSize::Medium as usize, "medium"),
     ];
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     for &(size, size_name) in batch_sizes.iter() {
         // Adjust sample count and measurement time based on batch size

@@ -1,7 +1,7 @@
 use crate::{
+    OptionType,
     core::{MarketData, VanillaOption},
     lets_be_rational::normal_distribution::{standard_normal_cdf, standard_normal_pdf},
-    OptionType,
 };
 
 pub(super) fn d1_d2(

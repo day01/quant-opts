@@ -1,10 +1,10 @@
 use super::{
-    math::{nd1_nd2, nprimed1},
     BlackScholes,
+    math::{nd1_nd2, nprimed1},
 };
 use crate::{
+    DAYS_PER_YEAR, OptionType,
     core::{Greeks, MarketData, VanillaOption},
-    OptionType, DAYS_PER_YEAR,
 };
 
 impl BlackScholes {

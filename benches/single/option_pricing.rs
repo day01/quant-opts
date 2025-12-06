@@ -1,12 +1,12 @@
 use std::{hint::black_box, time::Duration};
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use quant_opts::{BlackScholes, OptionType};
 
 // Fix the module import using a path relative to the crate root
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_standard_inputs, BenchCase, Moneyness, TimeToMaturity, VolatilityLevel};
+use common::{BenchCase, Moneyness, TimeToMaturity, VolatilityLevel, generate_standard_inputs};
 
 fn bench_option_pricing(c: &mut Criterion) {
     let mut group = c.benchmark_group("Single Option Pricing");

@@ -7,7 +7,7 @@
 
 use std::hint::black_box;
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use quant_opts::lets_be_rational::{
     asymptotic_expansion_of_normalised_black_call, small_t_expansion_of_normalised_black_call,
 };

@@ -1,11 +1,11 @@
 use std::{hint::black_box, time::Duration};
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use quant_opts::{BlackScholes, OptionType};
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_standard_inputs, BenchCase, Moneyness, TimeToMaturity, VolatilityLevel};
+use common::{BenchCase, Moneyness, TimeToMaturity, VolatilityLevel, generate_standard_inputs};
 
 fn bench_implied_volatility(c: &mut Criterion) {
     let mut group = c.benchmark_group("Implied Volatility");
@@ -77,7 +77,11 @@ fn bench_implied_volatility(c: &mut Criterion) {
 
         println!(
             "Verification for {}: Original sigma = {:.6}, IV standard = {:.6}, IV rational = {:.6}, Diff = {:.6}",
-            name, sigma, iv_standard, iv_rational, (sigma - iv_standard).abs()
+            name,
+            sigma,
+            iv_standard,
+            iv_rational,
+            (sigma - iv_standard).abs()
         );
     }
 

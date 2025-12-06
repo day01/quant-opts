@@ -924,7 +924,7 @@ dependencies = [
 
 [[package]]
 name = "quant-opts"
-version = "0.24.0"
+version = "0.1.0"
 dependencies = [
  "approx",
  "assert_approx_eq",

@@ -1,12 +1,12 @@
 use std::{hint::black_box, time::Duration};
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use quant_opts::BlackScholes;
-use rand::thread_rng;
+use rand::rng;
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_random_inputs, get_sample_config, BatchSize, BenchCase};
+use common::{BatchSize, BenchCase, generate_random_inputs, get_sample_config};
 
 fn bench_throughput(c: &mut Criterion) {
     let mut group = c.benchmark_group("Option Pricing Throughput");
@@ -18,7 +18,7 @@ fn bench_throughput(c: &mut Criterion) {
         (BatchSize::Large as usize, "large"),
     ];
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     for &(size, size_name) in batch_sizes.iter() {
         let (sample_count, measurement_time) = get_sample_config(size);

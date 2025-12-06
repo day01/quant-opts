@@ -30,7 +30,7 @@ pub mod lets_be_rational;
 
 pub use core::{MarketData, OptionStyle, OptionType, VanillaOption};
 
-pub use models::{black_scholes::BlackScholes, VanillaModel};
+pub use models::{VanillaModel, black_scholes::BlackScholes};
 
 #[cfg(feature = "wrappers")]
 pub mod wrappers;

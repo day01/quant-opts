@@ -3,13 +3,13 @@ use std::f64::consts::FRAC_1_SQRT_2;
 use statrs::consts::SQRT_2PI;
 
 use crate::{
+    OptionType,
     lets_be_rational::{
+        DENORMALISATION_CUTOFF, ONE_OVER_SQRT_TWO_PI,
         cody::optimized::{erfc, erfcx},
         intrinsic::normalised_intrinsic,
         normal_distribution::standard_normal_cdf,
-        DENORMALISATION_CUTOFF, ONE_OVER_SQRT_TWO_PI,
     },
-    OptionType,
 };
 
 const H_LARGE: f64 = -10.0;

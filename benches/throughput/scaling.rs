@@ -1,13 +1,13 @@
 use std::{hint::black_box, time::Duration};
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use indicatif::{ProgressBar, ProgressStyle};
 use quant_opts::BlackScholes;
-use rand::thread_rng;
+use rand::rng;
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_random_inputs, get_sample_config, BenchCase};
+use common::{BenchCase, generate_random_inputs, get_sample_config};
 
 const BATCH_SIZES: [usize; 9] = [
     10,      // Tiny
@@ -26,7 +26,7 @@ fn bench_scaling(c: &mut Criterion) {
 
     group.warm_up_time(Duration::from_millis(500));
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     let progress_bar = ProgressBar::new(BATCH_SIZES.len() as u64);
     progress_bar.set_style(

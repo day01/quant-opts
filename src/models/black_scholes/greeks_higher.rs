@@ -1,10 +1,10 @@
 use super::{
-    math::{d1_d2, nd1_nd2, nprimed1},
     BlackScholes,
+    math::{d1_d2, nd1_nd2, nprimed1},
 };
 use crate::{
-    core::{MarketData, VanillaOption},
     OptionType,
+    core::{MarketData, VanillaOption},
 };
 
 impl BlackScholes {

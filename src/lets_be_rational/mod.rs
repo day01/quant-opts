@@ -1,6 +1,6 @@
 use statrs::consts::SQRT_2PI;
 
-use crate::{lets_be_rational::black::normalised_black, OptionType};
+use crate::{OptionType, lets_be_rational::black::normalised_black};
 
 // NOTE: black has to be private. If is public then `calc_rational_iv` is decreased benches dramatically.
 mod black;

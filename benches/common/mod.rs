@@ -1,8 +1,8 @@
 use quant_opts::{MarketData, OptionStyle, OptionType, VanillaOption};
 use rand::{
+    Rng,
     distr::{Distribution, Uniform},
     rngs::ThreadRng,
-    Rng,
 };
 
 /// Defines different option moneyness categories

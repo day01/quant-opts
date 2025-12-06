@@ -1,7 +1,7 @@
 #![cfg(feature = "wrappers")]
 
 use assert_approx_eq::assert_approx_eq;
-use quant_opts::{wrappers, OptionType};
+use quant_opts::{OptionType, wrappers};
 
 #[test]
 fn price_eur_call_bs_matches_core_api() {

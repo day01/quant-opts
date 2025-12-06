@@ -55,11 +55,7 @@ const Q: [f64; 5] = [
 ];
 
 fn d_int(x: f64) -> f64 {
-    if x > 0.0 {
-        x.floor()
-    } else {
-        -(-x).floor()
-    }
+    if x > 0.0 { x.floor() } else { -(-x).floor() }
 }
 
 fn smoothened_exponential_of_negative_square(y: f64) -> f64 {

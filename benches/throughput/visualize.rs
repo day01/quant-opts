@@ -5,14 +5,14 @@ use std::{
     time::{Duration, Instant},
 };
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use plotters::prelude::*;
 use quant_opts::BlackScholes;
-use rand::thread_rng;
+use rand::rng;
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_random_inputs, BatchSize, BenchCase};
+use common::{BatchSize, BenchCase, generate_random_inputs};
 
 // Define batch sizes for visualization
 const BATCH_SIZES: [usize; 10] = [
@@ -31,7 +31,7 @@ fn measure_scaling() {
     println!("Running scaling visualization...");
 
     // Prepare data structures
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut time_per_option_results: Vec<(String, Vec<(f64, f64)>)> = Vec::new();
     let mut throughput_results: Vec<(String, Vec<(f64, f64)>)> = Vec::new();
 
@@ -83,8 +83,10 @@ fn measure_scaling() {
         gamma_times.push((size as f64, gamma_time));
         gamma_throughput.push((size as f64, 1_000_000_000.0 / gamma_time));
 
-        println!("Batch size: {}, price: {:.2} ns/op, rational: {:.2} ns/op, delta: {:.2} ns/op, gamma: {:.2} ns/op",
-            size, pricing_time, rational_time, delta_time, gamma_time);
+        println!(
+            "Batch size: {}, price: {:.2} ns/op, rational: {:.2} ns/op, delta: {:.2} ns/op, gamma: {:.2} ns/op",
+            size, pricing_time, rational_time, delta_time, gamma_time
+        );
     }
 
     // Organize data for visualization

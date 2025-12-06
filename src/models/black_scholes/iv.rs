@@ -1,8 +1,8 @@
 use super::BlackScholes;
 use crate::{
+    _E, A, B, C, D, F,
     core::{MarketData, VanillaOption},
     lets_be_rational::implied_volatility_from_a_transformed_rational_guess,
-    A, B, C, D, F, _E,
 };
 
 impl BlackScholes {

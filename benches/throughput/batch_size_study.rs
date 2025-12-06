@@ -1,12 +1,12 @@
 use std::{hint::black_box, time::Duration};
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use quant_opts::BlackScholes;
-use rand::thread_rng;
+use rand::rng;
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_random_inputs, BatchSize, BenchCase};
+use common::{BatchSize, BenchCase, generate_random_inputs};
 
 fn bench_batch_size_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("Batch Size Scaling");
@@ -22,7 +22,7 @@ fn bench_batch_size_scaling(c: &mut Criterion) {
         10_000, // Large (if time permits)
     ];
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     for size in batch_sizes {
         let inputs: Vec<BenchCase> = generate_random_inputs(size, &mut rng);

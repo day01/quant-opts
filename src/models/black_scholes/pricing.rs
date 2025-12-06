@@ -1,8 +1,8 @@
-use super::{math::nd1_nd2, BlackScholes};
+use super::{BlackScholes, math::nd1_nd2};
 use crate::{
+    OptionType,
     core::{MarketData, VanillaOption},
     lets_be_rational::black as black_price,
-    OptionType,
 };
 
 impl BlackScholes {
