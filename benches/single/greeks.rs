@@ -193,5 +193,10 @@ fn bench_second_order_greeks(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_greeks, bench_all_greeks, bench_second_order_greeks);
+criterion_group!(
+    benches,
+    bench_greeks,
+    bench_all_greeks,
+    bench_second_order_greeks
+);
 criterion_main!(benches);
