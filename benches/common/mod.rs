@@ -1,10 +1,7 @@
-use std::f64::consts::PI;
-
 use quant_opts::{MarketData, OptionStyle, OptionType, VanillaOption};
-use rand::{
-    distributions::{Distribution, Standard, Uniform},
-    prelude::*,
-};
+use rand::distr::{Distribution, Uniform};
+use rand::rngs::ThreadRng;
+use rand::Rng;
 
 /// Defines different option moneyness categories
 #[derive(Debug, Clone, Copy)]
@@ -121,15 +118,15 @@ pub fn generate_random_inputs(size: usize, rng: &mut ThreadRng) -> Vec<BenchCase
     let mut inputs = Vec::with_capacity(size);
 
     // Define distributions for parameters
-    let spot_dist = Uniform::from(50.0..150.0);
-    let strike_dist = Uniform::from(50.0..150.0);
-    let rate_dist = Uniform::from(0.0..0.10);
-    let div_dist = Uniform::from(0.0..0.05);
-    let time_dist = Uniform::from(1.0 / 365.25..1.0);
-    let vol_dist = Uniform::from(0.05..0.50);
+    let spot_dist = Uniform::new(50.0, 150.0).unwrap();
+    let strike_dist = Uniform::new(50.0, 150.0).unwrap();
+    let rate_dist = Uniform::new(0.0, 0.10).unwrap();
+    let div_dist = Uniform::new(0.0, 0.05).unwrap();
+    let time_dist = Uniform::new(1.0 / 365.25, 1.0).unwrap();
+    let vol_dist = Uniform::new(0.05, 0.50).unwrap();
 
     for _ in 0..size {
-        let option_type = if rng.gen::<bool>() {
+        let option_type = if rng.random::<bool>() {
             OptionType::Call
         } else {
             OptionType::Put
@@ -206,15 +203,15 @@ impl InputsSoA {
         let mut result = Self::with_capacity(size);
 
         // Define distributions for parameters
-        let spot_dist = Uniform::from(50.0..150.0);
-        let strike_dist = Uniform::from(50.0..150.0);
-        let rate_dist = Uniform::from(0.0..0.10);
-        let div_dist = Uniform::from(0.0..0.05);
-        let time_dist = Uniform::from(1.0 / 365.25..1.0);
-        let vol_dist = Uniform::from(0.05..0.50);
+        let spot_dist = Uniform::new(50.0, 150.0).unwrap();
+        let strike_dist = Uniform::new(50.0, 150.0).unwrap();
+        let rate_dist = Uniform::new(0.0, 0.10).unwrap();
+        let div_dist = Uniform::new(0.0, 0.05).unwrap();
+        let time_dist = Uniform::new(1.0 / 365.25, 1.0).unwrap();
+        let vol_dist = Uniform::new(0.05, 0.50).unwrap();
 
         for _ in 0..size {
-            result.option_types.push(if rng.gen::<bool>() {
+            result.option_types.push(if rng.random::<bool>() {
                 OptionType::Call
             } else {
                 OptionType::Put
