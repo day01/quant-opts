@@ -20,7 +20,6 @@ jobs:
       matrix:
         target: [
           "wasm32-unknown-unknown",
-          "aarch64-unknown-linux-gnu",
           "x86_64-unknown-linux-gnu",
           "x86_64-pc-windows-gnu" ]
 
@@ -30,10 +29,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libfontconfig1-dev
+      - name: Install aarch64 cross toolchain
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross
       - name: Install Rust
         uses: dtolnay/rust-toolchain@nightly
       - name: Install target
         run: rustup target add ${{ matrix.target }}
+      - name: Set aarch64 linker
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
       - name: Build
         run: cargo build --target ${{ matrix.target }} --verbose
 
