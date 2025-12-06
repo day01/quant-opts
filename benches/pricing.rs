@@ -1,24 +1,29 @@
 use std::hint::black_box;
 
-use blackscholes::{Inputs, OptionType, Pricing};
 use criterion::{criterion_group, criterion_main, Criterion};
+use quant_opts::{BlackScholes, MarketData, OptionStyle, OptionType, VanillaOption};
 
-const INPUTS: Inputs = Inputs {
-    option_type: OptionType::Call,
-    s: 51.03,
-    k: 55.0,
-    p: None,
-    r: 0.0,
-    q: 0.0,
-    t: 25.0 / 360.0,
-    sigma: Some(0.5),
+const OPTION: VanillaOption = VanillaOption {
+    style: OptionStyle::European,
+    kind: OptionType::Call,
+    strike: 55.0,
+    maturity: 25.0 / 360.0,
 };
+
+const MARKET: MarketData = MarketData {
+    spot: 51.03,
+    rate: 0.0,
+    dividend_yield: 0.0,
+};
+
+const SIGMA: f64 = 0.5;
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("calc_price", |b| {
         b.iter(|| {
-            let input = black_box(INPUTS);
-            let result = input.calc_price().map_err(|e| black_box(e)).unwrap();
+            let result = BlackScholes::price(&OPTION, &MARKET, SIGMA)
+                .map_err(|e| black_box(e))
+                .unwrap();
             black_box(result + 1.0);
         })
     });

@@ -1,11 +1,11 @@
 use std::{hint::black_box, time::Duration};
 
-use blackscholes::{ImpliedVolatility, Inputs, OptionType, Pricing};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use quant_opts::{BlackScholes, OptionType};
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_standard_inputs, Moneyness, TimeToMaturity, VolatilityLevel};
+use common::{generate_standard_inputs, BenchCase, Moneyness, TimeToMaturity, VolatilityLevel};
 
 fn bench_implied_volatility(c: &mut Criterion) {
     let mut group = c.benchmark_group("Implied Volatility");
@@ -23,21 +23,15 @@ fn bench_implied_volatility(c: &mut Criterion) {
 
     // Generate inputs for benchmarking IV calculation
     for (name, option_type, moneyness) in configurations {
-        // Create standard inputs
-        let mut inputs = generate_standard_inputs(
+        let case: BenchCase = generate_standard_inputs(
             option_type,
             moneyness,
             TimeToMaturity::MediumTerm,
             VolatilityLevel::Medium,
         );
 
-        // Calculate option price using inputs.sigma
-        let sigma = inputs.sigma.unwrap();
-        let price = inputs.calc_price().unwrap();
-
-        // Set price and clear sigma for IV calculation
-        inputs.p = Some(price);
-        inputs.sigma = None;
+        let sigma = case.vol;
+        let price = BlackScholes::price(&case.option, &case.market, sigma).unwrap();
 
         // Bench standard IV calculation with different tolerances
         for (tolerance_name, tolerance) in [
@@ -47,11 +41,14 @@ fn bench_implied_volatility(c: &mut Criterion) {
         ] {
             group.bench_with_input(
                 BenchmarkId::new(format!("calc_iv_{}", tolerance_name), name),
-                &(inputs.clone(), tolerance),
-                |b, (inputs, tolerance): &(Inputs, f64)| {
+                &tolerance,
+                |b, &tolerance: &f64| {
                     b.iter(|| {
-                        let iv = black_box(inputs).calc_iv(*tolerance).unwrap();
-                        black_box(iv)
+                        let iv = black_box(
+                            BlackScholes::implied_vol(price, &case.option, &case.market, tolerance)
+                                .unwrap(),
+                        );
+                        black_box(iv);
                     })
                 },
             );
@@ -60,18 +57,23 @@ fn bench_implied_volatility(c: &mut Criterion) {
         // Bench rational IV calculation
         group.bench_with_input(
             BenchmarkId::new("calc_rational_iv", name),
-            &inputs,
-            |b, inputs: &Inputs| {
+            &price,
+            |b, &price| {
                 b.iter(|| {
-                    let iv = black_box(inputs).calc_rational_iv().unwrap();
-                    black_box(iv)
+                    let iv = black_box(
+                        BlackScholes::rational_implied_vol(price, &case.option, &case.market)
+                            .unwrap(),
+                    );
+                    black_box(iv);
                 })
             },
         );
 
         // Compare to known result for verification
-        let iv_standard = inputs.calc_iv(0.00001).unwrap();
-        let iv_rational = inputs.calc_rational_iv().unwrap();
+        let iv_standard =
+            BlackScholes::implied_vol(price, &case.option, &case.market, 0.00001).unwrap();
+        let iv_rational =
+            BlackScholes::rational_implied_vol(price, &case.option, &case.market).unwrap();
 
         println!(
             "Verification for {}: Original sigma = {:.6}, IV standard = {:.6}, IV rational = {:.6}, Diff = {:.6}",

@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use blackscholes::{Inputs, OptionType};
+use quant_opts::{MarketData, OptionStyle, OptionType, VanillaOption};
 use rand::{
     distributions::{Distribution, Standard, Uniform},
     prelude::*,
@@ -32,13 +32,21 @@ pub enum VolatilityLevel {
     High,   // > 30%
 }
 
-/// Generates a standard set of inputs for benchmarking
+/// Benchmark case: option + market data + volatility.
+#[derive(Debug, Clone, Copy)]
+pub struct BenchCase {
+    pub option: VanillaOption,
+    pub market: MarketData,
+    pub vol: f64,
+}
+
+/// Generates a standard benchmark case.
 pub fn generate_standard_inputs(
     option_type: OptionType,
     moneyness: Moneyness,
     maturity: TimeToMaturity,
     vol_level: VolatilityLevel,
-) -> Inputs {
+) -> BenchCase {
     let spot = 100.0;
 
     // Set strike based on moneyness
@@ -88,20 +96,28 @@ pub fn generate_standard_inputs(
         VolatilityLevel::High => 0.40,
     };
 
-    Inputs::new(
-        option_type,
-        spot,
+    let option = VanillaOption {
+        style: OptionStyle::European,
+        kind: option_type,
         strike,
-        None,
-        0.05, // Risk-free rate
-        0.01, // Dividend yield
-        time,
-        Some(vol),
-    )
+        maturity: time,
+    };
+
+    let market = MarketData {
+        spot,
+        rate: 0.05,
+        dividend_yield: 0.01,
+    };
+
+    BenchCase {
+        option,
+        market,
+        vol,
+    }
 }
 
-/// Generates a batch of random inputs for benchmarking
-pub fn generate_random_inputs(size: usize, rng: &mut ThreadRng) -> Vec<Inputs> {
+/// Generates a batch of random benchmark cases.
+pub fn generate_random_inputs(size: usize, rng: &mut ThreadRng) -> Vec<BenchCase> {
     let mut inputs = Vec::with_capacity(size);
 
     // Define distributions for parameters
@@ -119,16 +135,24 @@ pub fn generate_random_inputs(size: usize, rng: &mut ThreadRng) -> Vec<Inputs> {
             OptionType::Put
         };
 
-        inputs.push(Inputs::new(
-            option_type,
-            spot_dist.sample(rng),
-            strike_dist.sample(rng),
-            None,
-            rate_dist.sample(rng),
-            div_dist.sample(rng),
-            time_dist.sample(rng),
-            Some(vol_dist.sample(rng)),
-        ));
+        let option = VanillaOption {
+            style: OptionStyle::European,
+            kind: option_type,
+            strike: strike_dist.sample(rng),
+            maturity: time_dist.sample(rng),
+        };
+
+        let market = MarketData {
+            spot: spot_dist.sample(rng),
+            rate: rate_dist.sample(rng),
+            dividend_yield: div_dist.sample(rng),
+        };
+
+        inputs.push(BenchCase {
+            option,
+            market,
+            vol: vol_dist.sample(rng),
+        });
     }
 
     inputs
@@ -160,24 +184,24 @@ impl InputsSoA {
         }
     }
 
-    /// Convert Vec<Inputs> to InputsSoA format
-    pub fn from_inputs(inputs: &[Inputs]) -> Self {
-        let mut result = Self::with_capacity(inputs.len());
+    /// Convert benchmark cases to SoA format.
+    pub fn from_cases(cases: &[BenchCase]) -> Self {
+        let mut result = Self::with_capacity(cases.len());
 
-        for input in inputs {
-            result.option_types.push(input.option_type);
-            result.spots.push(input.s);
-            result.strikes.push(input.k);
-            result.rates.push(input.r);
-            result.dividends.push(input.q);
-            result.times.push(input.t);
-            result.volatilities.push(input.sigma.unwrap_or(0.0));
+        for case in cases {
+            result.option_types.push(case.option.kind);
+            result.spots.push(case.market.spot);
+            result.strikes.push(case.option.strike);
+            result.rates.push(case.market.rate);
+            result.dividends.push(case.market.dividend_yield);
+            result.times.push(case.option.maturity);
+            result.volatilities.push(case.vol);
         }
 
         result
     }
 
-    /// Generate random SoA inputs directly
+    /// Generate random SoA inputs directly using the same distributions
     pub fn random(size: usize, rng: &mut ThreadRng) -> Self {
         let mut result = Self::with_capacity(size);
 
@@ -190,13 +214,11 @@ impl InputsSoA {
         let vol_dist = Uniform::from(0.05..0.50);
 
         for _ in 0..size {
-            let option_type = if rng.gen::<bool>() {
+            result.option_types.push(if rng.gen::<bool>() {
                 OptionType::Call
             } else {
                 OptionType::Put
-            };
-
-            result.option_types.push(option_type);
+            });
             result.spots.push(spot_dist.sample(rng));
             result.strikes.push(strike_dist.sample(rng));
             result.rates.push(rate_dist.sample(rng));

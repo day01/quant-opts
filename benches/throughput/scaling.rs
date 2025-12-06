@@ -1,13 +1,13 @@
 use std::{hint::black_box, time::Duration};
 
-use blackscholes::Pricing;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use indicatif::{ProgressBar, ProgressStyle};
+use quant_opts::BlackScholes;
 use rand::thread_rng;
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_random_inputs, get_sample_config};
+use common::{generate_random_inputs, get_sample_config, BenchCase};
 
 const BATCH_SIZES: [usize; 9] = [
     10,      // Tiny
@@ -46,7 +46,7 @@ fn bench_scaling(c: &mut Criterion) {
         group.sample_size(sample_count);
         group.measurement_time(measurement_time);
 
-        let inputs = generate_random_inputs(size, &mut rng);
+        let inputs: Vec<BenchCase> = generate_random_inputs(size, &mut rng);
 
         group.throughput(Throughput::Elements(size as u64));
 
@@ -55,7 +55,9 @@ fn bench_scaling(c: &mut Criterion) {
             b.iter(|| {
                 let mut results = Vec::with_capacity(inputs.len());
                 for input in black_box(&inputs) {
-                    results.push(input.calc_price().unwrap());
+                    results.push(
+                        BlackScholes::price(&input.option, &input.market, input.vol).unwrap(),
+                    );
                 }
                 black_box(results)
             })

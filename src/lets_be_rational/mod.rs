@@ -7,6 +7,15 @@ use crate::{lets_be_rational::black::normalised_black, OptionType};
 // if someone know why I will be glad to know too...
 mod black;
 
+// For internal validation/benchmarks we sometimes need direct access to
+// specific helpers from `black.rs`. To avoid permanently degrading
+// optimisations on the critical IV path, these are only re-exported
+// under a dedicated feature.
+#[cfg(feature = "lets-be-rational-validation")]
+pub use black::{
+    asymptotic_expansion_of_normalised_black_call, small_t_expansion_of_normalised_black_call,
+};
+
 mod cody;
 mod intrinsic;
 pub(crate) mod normal_distribution;

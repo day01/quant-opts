@@ -1,16 +1,18 @@
+#![cfg(feature = "visualize-bench")]
+
 use std::{
     hint::black_box,
     time::{Duration, Instant},
 };
 
-use blackscholes::{Greeks, Inputs, Pricing};
 use criterion::{criterion_group, criterion_main, Criterion};
 use plotters::prelude::*;
+use quant_opts::BlackScholes;
 use rand::thread_rng;
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_random_inputs, BatchSize};
+use common::{generate_random_inputs, BatchSize, BenchCase};
 
 // Define batch sizes for visualization
 const BATCH_SIZES: [usize; 10] = [
@@ -51,27 +53,33 @@ fn measure_scaling() {
 
     // Run benchmark for each batch size
     for &size in BATCH_SIZES.iter() {
-        let inputs = generate_random_inputs(size, &mut rng);
+        let inputs: Vec<BenchCase> = generate_random_inputs(size, &mut rng);
 
         // Measure pricing time
-        let pricing_time =
-            measure_operation_time(size, &inputs, |input| input.calc_price().unwrap());
+        let pricing_time = measure_operation_time(size, &inputs, |case| {
+            BlackScholes::price(&case.option, &case.market, case.vol).unwrap()
+        });
         price_times.push((size as f64, pricing_time));
         price_throughput.push((size as f64, 1_000_000_000.0 / pricing_time));
 
         // Measure rational pricing time
-        let rational_time =
-            measure_operation_time(size, &inputs, |input| input.calc_rational_price().unwrap());
+        let rational_time = measure_operation_time(size, &inputs, |case| {
+            BlackScholes::rational_price(&case.option, &case.market, case.vol).unwrap()
+        });
         rational_times.push((size as f64, rational_time));
         rational_throughput.push((size as f64, 1_000_000_000.0 / rational_time));
 
         // Measure delta calculation time
-        let delta_time = measure_operation_time(size, &inputs, |input| input.calc_delta().unwrap());
+        let delta_time = measure_operation_time(size, &inputs, |case| {
+            BlackScholes::delta(&case.option, &case.market, case.vol).unwrap()
+        });
         delta_times.push((size as f64, delta_time));
         delta_throughput.push((size as f64, 1_000_000_000.0 / delta_time));
 
         // Measure gamma calculation time
-        let gamma_time = measure_operation_time(size, &inputs, |input| input.calc_gamma().unwrap());
+        let gamma_time = measure_operation_time(size, &inputs, |case| {
+            BlackScholes::gamma(&case.option, &case.market, case.vol).unwrap()
+        });
         gamma_times.push((size as f64, gamma_time));
         gamma_throughput.push((size as f64, 1_000_000_000.0 / gamma_time));
 
@@ -103,9 +111,9 @@ fn measure_scaling() {
 }
 
 // Helper function to measure operation time
-fn measure_operation_time<F>(size: usize, inputs: &[Inputs], operation: F) -> f64
+fn measure_operation_time<F>(size: usize, inputs: &[BenchCase], operation: F) -> f64
 where
-    F: Fn(&Inputs) -> f64,
+    F: Fn(&BenchCase) -> f64,
 {
     const WARMUP_ITERS: usize = 5;
     const MEASUREMENT_ITERS: usize = 10;

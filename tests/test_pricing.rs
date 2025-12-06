@@ -1,100 +1,103 @@
 use assert_approx_eq::assert_approx_eq;
-use blackscholes::{Inputs, OptionType, Pricing};
+use quant_opts::{BlackScholes, MarketData, OptionStyle, OptionType, VanillaOption};
 
-const INPUTS_CALL_OTM: Inputs = Inputs {
-    option_type: OptionType::Call,
-    s: 100.0,
-    k: 110.0,
-    p: None,
-    r: 0.05,
-    q: 0.05,
-    t: 20.0 / 365.25,
-    sigma: Some(0.2),
-};
-const INPUTS_CALL_ITM: Inputs = Inputs {
-    option_type: OptionType::Call,
-    s: 100.0,
-    k: 90.0,
-    p: None,
-    r: 0.05,
-    q: 0.05,
-    t: 20.0 / 365.25,
-    sigma: Some(0.2),
-};
-const INPUTS_PUT_OTM: Inputs = Inputs {
-    option_type: OptionType::Put,
-    s: 100.0,
-    k: 90.0,
-    p: None,
-    r: 0.05,
-    q: 0.05,
-    t: 20.0 / 365.25,
-    sigma: Some(0.2),
-};
-const INPUTS_PUT_ITM: Inputs = Inputs {
-    option_type: OptionType::Put,
-    s: 100.0,
-    k: 110.0,
-    p: None,
-    r: 0.05,
-    q: 0.05,
-    t: 20.0 / 365.25,
-    sigma: Some(0.2),
+const SIGMA: f64 = 0.2;
+
+const VANILLA_CALL_OTM: VanillaOption = VanillaOption {
+    style: OptionStyle::European,
+    kind: OptionType::Call,
+    strike: 110.0,
+    maturity: 20.0 / 365.25,
 };
 
-const INPUTS_BRANCH_CUT: Inputs = Inputs {
-    option_type: OptionType::Put,
-    s: 100.0,
-    k: 100.0,
-    p: None,
-    r: 0.0,
-    q: 0.0,
-    sigma: Some(0.421),
-    t: 1.0,
+const VANILLA_CALL_ITM: VanillaOption = VanillaOption {
+    style: OptionStyle::European,
+    kind: OptionType::Call,
+    strike: 90.0,
+    maturity: 20.0 / 365.25,
 };
+
+const VANILLA_PUT_OTM: VanillaOption = VanillaOption {
+    style: OptionStyle::European,
+    kind: OptionType::Put,
+    strike: 90.0,
+    maturity: 20.0 / 365.25,
+};
+
+const VANILLA_PUT_ITM: VanillaOption = VanillaOption {
+    style: OptionStyle::European,
+    kind: OptionType::Put,
+    strike: 110.0,
+    maturity: 20.0 / 365.25,
+};
+
+const MARKET_COMMON: MarketData = MarketData {
+    spot: 100.0,
+    rate: 0.05,
+    dividend_yield: 0.05,
+};
+
+const VANILLA_BRANCH_CUT: VanillaOption = VanillaOption {
+    style: OptionStyle::European,
+    kind: OptionType::Put,
+    strike: 100.0,
+    maturity: 1.0,
+};
+
+const MARKET_BRANCH_CUT: MarketData = MarketData {
+    spot: 100.0,
+    rate: 0.0,
+    dividend_yield: 0.0,
+};
+
+const SIGMA_BRANCH_CUT: f64 = 0.421;
 
 #[test]
 fn price_call_otm() {
-    assert_approx_eq!(INPUTS_CALL_OTM.calc_price().unwrap(), 0.0376, 0.001);
+    let price = BlackScholes::price(&VANILLA_CALL_OTM, &MARKET_COMMON, SIGMA).unwrap();
+    assert_approx_eq!(price, 0.0376, 0.001);
 }
 #[test]
 fn price_call_itm() {
-    assert_approx_eq!(INPUTS_CALL_ITM.calc_price().unwrap(), 9.9913, 0.001);
+    let price = BlackScholes::price(&VANILLA_CALL_ITM, &MARKET_COMMON, SIGMA).unwrap();
+    assert_approx_eq!(price, 9.9913, 0.001);
 }
 
 #[test]
 fn price_put_otm() {
-    assert_approx_eq!(INPUTS_PUT_OTM.calc_price().unwrap(), 0.01867, 0.001);
+    let price = BlackScholes::price(&VANILLA_PUT_OTM, &MARKET_COMMON, SIGMA).unwrap();
+    assert_approx_eq!(price, 0.01867, 0.001);
 }
 #[test]
 fn price_put_itm() {
-    assert_approx_eq!(INPUTS_PUT_ITM.calc_price().unwrap(), 10.0103, 0.001);
+    let price = BlackScholes::price(&VANILLA_PUT_ITM, &MARKET_COMMON, SIGMA).unwrap();
+    assert_approx_eq!(price, 10.0103, 0.001);
 }
 
 #[test]
 fn price_using_lets_be_rational() {
     // compare the results from calc_price() and calc_rational_price() for the options above
     assert_approx_eq!(
-        INPUTS_CALL_OTM.calc_price().unwrap(),
-        INPUTS_CALL_OTM.calc_rational_price().unwrap(),
+        BlackScholes::price(&VANILLA_CALL_OTM, &MARKET_COMMON, SIGMA).unwrap(),
+        BlackScholes::rational_price(&VANILLA_CALL_OTM, &MARKET_COMMON, SIGMA).unwrap(),
         0.001
     );
 
     assert_approx_eq!(
-        INPUTS_CALL_ITM.calc_price().unwrap(),
-        INPUTS_CALL_ITM.calc_rational_price().unwrap(),
+        BlackScholes::price(&VANILLA_CALL_ITM, &MARKET_COMMON, SIGMA).unwrap(),
+        BlackScholes::rational_price(&VANILLA_CALL_ITM, &MARKET_COMMON, SIGMA).unwrap(),
         0.001
     );
 
     assert_approx_eq!(
-        INPUTS_PUT_OTM.calc_price().unwrap(),
-        INPUTS_PUT_OTM.calc_rational_price().unwrap(),
+        BlackScholes::price(&VANILLA_PUT_OTM, &MARKET_COMMON, SIGMA).unwrap(),
+        BlackScholes::rational_price(&VANILLA_PUT_OTM, &MARKET_COMMON, SIGMA).unwrap(),
         0.001
     );
 
     assert_approx_eq!(
-        INPUTS_PUT_ITM.calc_price().unwrap(),
-        INPUTS_PUT_ITM.calc_rational_price().unwrap(),
+        BlackScholes::price(&VANILLA_PUT_ITM, &MARKET_COMMON, SIGMA).unwrap(),
+        BlackScholes::rational_price(&VANILLA_PUT_ITM, &MARKET_COMMON, SIGMA).unwrap(),
         0.001
     );
 }
@@ -102,7 +105,8 @@ fn price_using_lets_be_rational() {
 #[test]
 fn test_rational_price_near_branch_cut() {
     assert_approx_eq!(
-        INPUTS_BRANCH_CUT.calc_rational_price().unwrap(),
+        BlackScholes::rational_price(&VANILLA_BRANCH_CUT, &MARKET_BRANCH_CUT, SIGMA_BRANCH_CUT)
+            .unwrap(),
         16.67224,
         0.001
     );

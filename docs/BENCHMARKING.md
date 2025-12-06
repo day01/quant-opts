@@ -1,130 +1,100 @@
-# BlackScholes Performance Benchmarking
+# quant-opts Benchmarking
 
-This document outlines the modern benchmarking infrastructure for the BlackScholes library, which leverages GitHub Actions and GitHub Pages for automated performance tracking and visualization.
+This document describes how performance benchmarks are organised and run for
+`quant-opts` (Black–Scholes + vanilla model API).
 
 ## Overview
 
-The benchmarking system is built around **Criterion.rs** and **github-action-benchmark**, providing:
+Benchmarks are implemented with **Criterion.rs** and cover:
 
-- 📊 **Interactive Charts**: Professional visualizations hosted on GitHub Pages
-- 🔍 **Automated Regression Detection**: CI integration that catches performance regressions
-- 📈 **Historical Tracking**: Continuous monitoring of performance trends over time  
-- 💬 **PR Integration**: Automatic benchmark comparison comments on pull requests
+- single‑option pricing, Greeks and implied volatility,
+- batch workloads (arrays of options / SoA layouts),
+- throughput and scaling studies,
+- micro‑benchmarks for internal “Let’s Be Rational” helpers.
 
-**Live Benchmark Results**: https://przemyslawolszewski.github.io/bs-rs/
+Baseline numbers for key operations are recorded in `docs/baseline.md`.
 
-## Automated Benchmarking Workflow
+## Benchmark suites
 
-### Trigger Conditions
+The main suites are defined as `[[bench]]` entries in `Cargo.toml`:
 
-Benchmarks run automatically when:
+- `pricing` – single option pricing via `BlackScholes::price` and `::rational_price`.
+- `implied_volatility` – implied vol, in particular
+  `BlackScholes::rational_implied_vol`.
+- `greeks` – first‑order Greeks for a representative option.
+- `single_option`, `single_greeks`, `single_iv` – more detailed grids over
+  moneyness, maturity and volatility.
+- `batch_pricing`, `batch_greeks` – Vec/SoA batch workloads (placeholders for
+  future SIMD/parallel implementations).
+- `throughput`, `scaling`, `batch_size_study` – focus on ops/sec and scaling
+  with batch size.
+- `black` – micro‑benchmarks of internal `lets_be_rational::black` expansions,
+  enabled only with a dedicated feature (see below).
 
-- **Pull Requests**: Against `main`/`master` with changes to:
-  - `src/**` (source code changes)
-  - `benches/**` (benchmark changes) 
-  - `Cargo.*` (dependency changes)
-  - `.github/workflows/benchmark.yml` (workflow changes)
+Some suites are feature‑gated:
 
-- **Pushes**: To `main`/`master` branch (updates the baseline and GitHub Pages)
+- `visualize` (in `benches/throughput/visualize.rs`) requires
+  the `visualize-bench` feature and `plotters` dependency.
+- `black` (in `validation/black.rs`) requires
+  the `lets-be-rational-validation` feature.
 
-- **Nightly**: Daily at 02:00 UTC to maintain continuous baseline data
+## Running benchmarks locally
 
-### Workflow Features
+Run all core benchmarks (without optional features):
 
-- **Path Filtering**: Only runs on relevant file changes (performance optimization)
-- **Concurrency Control**: Prevents overlapping benchmark runs
-- **Pinned Environment**: Uses `ubuntu-22.04` for reproducible results
-- **Artifact Preservation**: Criterion HTML reports available for 7 days
-- **Security**: Minimal permissions with `contents:write` and `pull-requests:write`
-
-## Benchmark Categories
-
-### 1. Single Option Operations
-
-Benchmarks for individual option calculations:
-- Black-Scholes pricing (`calc_price`)
-- Rational pricing (`calc_rational_price`)
-- Greeks calculation (Delta, Gamma, Vega, Theta, Rho)
-- Implied volatility calculation
-
-### 2. Batch Operations
-
-Benchmarks for processing batches of options:
-- Sequential batch processing
-- Struct-of-arrays (SoA) format for potential SIMD optimization
-- Varying batch sizes (10, 100, 1,000, etc.)
-
-### 3. High-Volume Throughput
-
-Benchmarks focused on operations per second:
-- Large batch processing (10,000+ options)
-- Throughput measurements with different processing strategies
-- Scaling behavior as batch size increases
-
-## Running Benchmarks Locally
-
-### Basic Usage
-
-Run a specific benchmark:
 ```bash
-cargo bench --bench single_option
+cargo bench --no-default-features
 ```
 
-Run all benchmarks:
+Run a specific suite, for example implied volatility:
+
 ```bash
-cargo bench
+cargo bench --no-default-features --bench implied_volatility
 ```
 
-### Generate CSV Output (GitHub Action Compatible)
+Run the “Let’s Be Rational” micro‑benchmarks:
 
-To generate CSV output compatible with the GitHub Action:
 ```bash
-cargo bench -- --output-format=csv
+cargo bench --no-default-features \
+  --features lets-be-rational-validation \
+  --bench black
 ```
 
-### View Local Results
+Criterion reports are written to `target/criterion/`. Open
+`target/criterion/report/index.html` in a browser for detailed charts.
 
-Criterion generates HTML reports in `target/criterion/`. Open `target/criterion/report/index.html` in your browser to view detailed results.
+## CI integration
 
-## Performance Regression Detection
+The workflow `.github/workflows/benchmark.yml` runs a subset of benchmarks on:
 
-### Automated Detection
+- pushes to `main` touching:
+  - `src/**`, `benches/**`, `Cargo.*`,
+  - `.github/workflows/benchmark.yml`,
+- pull requests to `main` with the same path filters.
 
-The GitHub Action automatically:
-- ✅ **Comments on PRs**: Shows performance comparison between PR and base branch
-- ⚠️ **Alert Threshold**: Warns when performance degrades by >10%
-- ❌ **Fail on Alert**: Fails the CI check if regression threshold is exceeded
-- 📊 **Summary Reports**: Provides structured benchmark comparison tables
+It uses `boa-dev/criterion-compare-action@v3` on `ubuntu-22.04` to:
 
-### Configuration
+- execute the configured `cargo bench` command,
+- compare current results with the base branch,
+- post a summary comment on the PR showing relative changes.
 
-Current thresholds:
-- **Alert Threshold**: 110% (10% slower triggers warning)
-- **Fail on Alert**: `true` (CI fails on regressions)
-- **Comment on Alert**: `true` (PR comments enabled)
+The workflow is intentionally conservative: it does not publish GitHub Pages
+or manipulate branches, and runs with minimal permissions (`pull-requests: write`).
 
-### Threshold Tuning
-
-To adjust sensitivity, modify `.github/workflows/benchmark.yml`:
-```yaml
-alert-threshold: '105%'  # 5% threshold (more sensitive)
-# or
-alert-threshold: '120%'  # 20% threshold (less sensitive)
-```
-
-## Adding New Benchmarks
+## Adding new benchmarks
 
 To add a new benchmark:
 
-1. **Create the benchmark file** in the appropriate directory:
+1. Create a file under `benches/`:
+
    ```rust
-   // benches/new_feature/my_benchmark.rs
+   // benches/my_feature.rs
    use criterion::{criterion_group, criterion_main, Criterion};
 
    fn benchmark_my_feature(c: &mut Criterion) {
        c.bench_function("my_feature", |b| {
            b.iter(|| {
-               // Your benchmark code here
+               // benchmarked code here
            })
        });
    }
@@ -133,76 +103,19 @@ To add a new benchmark:
    criterion_main!(benches);
    ```
 
-2. **Add to Cargo.toml**:
+2. Register it in `Cargo.toml`:
+
    ```toml
    [[bench]]
-   name = "my_benchmark"
-   path = "benches/new_feature/my_benchmark.rs"
+   name = "my_feature"
+   path = "benches/my_feature.rs"
    harness = false
    ```
 
-3. **Commit and push** - the workflow will automatically include your new benchmark!
+3. Optionally update `.github/workflows/benchmark.yml` if you want CI to
+   include or highlight the new suite.
 
-## System Dependencies
-
-For local development, ensure you have:
-
-- **Gnuplot**: Required for Criterion's HTML reports
-  - Ubuntu/Debian: `sudo apt-get install gnuplot`
-  - Fedora/RHEL: `sudo dnf install gnuplot`  
-  - Arch Linux: `sudo pacman -S gnuplot`
-  - macOS: `brew install gnuplot`
-
-## Repository Configuration
-
-### GitHub Pages Setup
-
-**Repository Settings → Pages:**
-- Source: "Deploy from branch"
-- Branch: `gh-pages`
-- Folder: `/` (root)
-
-### Required Permissions
-
-**Repository Settings → Actions → General:**
-- Workflow permissions: "Read and write permissions"
-- "Allow GitHub Actions to create and approve pull requests": ✅
-
-## Monitoring and Maintenance
-
-### Historical Data
-
-- **Baseline Collection**: Nightly runs ensure continuous data even during quiet periods
-- **Trend Analysis**: GitHub Pages shows performance trends over time
-- **Version Tracking**: Each commit's performance is tracked and visualized
-
-### Best Practices
-
-1. **Monitor False Positives**: Adjust `alert-threshold` if too many false alerts occur
-2. **Review PR Comments**: Use benchmark comparison comments to validate performance changes
-3. **Check GitHub Pages**: Regularly review the trend charts for gradual performance changes
-4. **Local Reproduction**: Use the CSV format locally to reproduce CI results
-
-### Future Enhancements
-
-Consider these additions as the project evolves:
-
-- **Multi-Platform Testing**: Matrix builds for different Rust versions/platforms
-- **Benchmark Categorization**: Separate different benchmark suites
-- **External Integration**: Connect with performance monitoring tools
-- **Custom Metrics**: Add domain-specific performance measurements
-
-## Troubleshooting
-
-### Common Issues
-
-1. **No benchmark results**: Ensure Criterion outputs CSV with `--output-format=csv`
-2. **Permission errors**: Verify repository settings have write permissions enabled
-3. **Missing GitHub Pages**: Check that `gh-pages` branch exists and Pages is configured
-4. **Threshold too sensitive**: Adjust `alert-threshold` in the workflow file
-
-### Getting Help
-
-- Check the [GitHub Action logs](../../actions) for detailed error messages
-- Review the [github-action-benchmark documentation](https://github.com/benchmark-action/github-action-benchmark)
-- Examine the `target/criterion/` directory structure locally 
+Keep benchmarks deterministic where possible (fixed seeds or static grids of
+inputs) so that comparisons across commits are meaningful. Baseline values for
+important paths (pricing, Greeks, IV) should be recorded or updated in
+`docs/baseline.md` when making deliberate performance changes.

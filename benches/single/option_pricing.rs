@@ -1,12 +1,12 @@
 use std::{hint::black_box, time::Duration};
 
-use blackscholes::{Inputs, OptionType, Pricing};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use quant_opts::{BlackScholes, OptionType};
 
 // Fix the module import using a path relative to the crate root
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_standard_inputs, Moneyness, TimeToMaturity, VolatilityLevel};
+use common::{generate_standard_inputs, BenchCase, Moneyness, TimeToMaturity, VolatilityLevel};
 
 fn bench_option_pricing(c: &mut Criterion) {
     let mut group = c.benchmark_group("Single Option Pricing");
@@ -62,15 +62,15 @@ fn bench_option_pricing(c: &mut Criterion) {
     ];
 
     for (name, option_type, moneyness, maturity, vol_level) in configurations {
-        let inputs = generate_standard_inputs(option_type, moneyness, maturity, vol_level);
+        let case: BenchCase = generate_standard_inputs(option_type, moneyness, maturity, vol_level);
 
         // Benchmark standard pricing
         group.bench_with_input(
             BenchmarkId::new("calc_price", name),
-            &inputs,
-            |b, inputs: &Inputs| {
+            &case,
+            |b, case: &BenchCase| {
                 b.iter(|| {
-                    let result = black_box(inputs).calc_price().unwrap();
+                    let result = BlackScholes::price(&case.option, &case.market, case.vol).unwrap();
                     black_box(result)
                 })
             },
@@ -79,10 +79,11 @@ fn bench_option_pricing(c: &mut Criterion) {
         // Benchmark rational pricing
         group.bench_with_input(
             BenchmarkId::new("calc_rational_price", name),
-            &inputs,
-            |b, inputs: &Inputs| {
+            &case,
+            |b, case: &BenchCase| {
                 b.iter(|| {
-                    let result = black_box(inputs).calc_rational_price().unwrap();
+                    let result =
+                        BlackScholes::rational_price(&case.option, &case.market, case.vol).unwrap();
                     black_box(result)
                 })
             },

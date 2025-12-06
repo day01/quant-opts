@@ -1,14 +1,12 @@
-use std::time::Duration;
+use std::{hint::black_box, time::Duration};
 
-use blackscholes::{Greeks, Inputs, OptionType, Pricing};
-use criterion::{
-    black_box, criterion_group, criterion_main, measurement::WallTime, BenchmarkId, Criterion,
-};
+use criterion::{criterion_group, criterion_main, measurement::WallTime, BenchmarkId, Criterion};
+use quant_opts::BlackScholes;
 use rand::thread_rng;
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_random_inputs, get_sample_config, BatchSize, InputsSoA};
+use common::{generate_random_inputs, get_sample_config, BatchSize, BenchCase, InputsSoA};
 
 // Batch Greeks calculation benchmark
 fn bench_batch_greeks(c: &mut Criterion) {
@@ -31,14 +29,16 @@ fn bench_batch_greeks(c: &mut Criterion) {
         group.measurement_time(measurement_time);
 
         // Generate random inputs for batch processing
-        let inputs = generate_random_inputs(size, &mut rng);
+        let inputs: Vec<BenchCase> = generate_random_inputs(size, &mut rng);
 
         // Benchmark naive batch processing of individual Greeks
         group.bench_function(BenchmarkId::new("delta", size_name), |b| {
             b.iter(|| {
                 let mut results = Vec::with_capacity(inputs.len());
                 for input in black_box(&inputs) {
-                    results.push(input.calc_delta().unwrap());
+                    results.push(
+                        BlackScholes::delta(&input.option, &input.market, input.vol).unwrap(),
+                    );
                 }
                 black_box(results)
             })
@@ -48,7 +48,9 @@ fn bench_batch_greeks(c: &mut Criterion) {
             b.iter(|| {
                 let mut results = Vec::with_capacity(inputs.len());
                 for input in black_box(&inputs) {
-                    results.push(input.calc_gamma().unwrap());
+                    results.push(
+                        BlackScholes::gamma(&input.option, &input.market, input.vol).unwrap(),
+                    );
                 }
                 black_box(results)
             })
@@ -58,7 +60,8 @@ fn bench_batch_greeks(c: &mut Criterion) {
             b.iter(|| {
                 let mut results = Vec::with_capacity(inputs.len());
                 for input in black_box(&inputs) {
-                    results.push(input.calc_vega().unwrap());
+                    results
+                        .push(BlackScholes::vega(&input.option, &input.market, input.vol).unwrap());
                 }
                 black_box(results)
             })
@@ -69,31 +72,36 @@ fn bench_batch_greeks(c: &mut Criterion) {
             b.iter(|| {
                 let mut results = Vec::with_capacity(inputs.len());
                 for input in black_box(&inputs) {
-                    results.push(input.calc_all_greeks().unwrap());
+                    results.push(
+                        BlackScholes::greeks(&input.option, &input.market, input.vol).unwrap(),
+                    );
                 }
                 black_box(results)
             })
         });
 
         // Convert to SoA format for future optimization
-        let inputs_soa = InputsSoA::from_inputs(&inputs);
+        let inputs_soa = InputsSoA::random(size, &mut rng);
 
         // Placeholder for future SIMD-optimized batch Greeks calculation
         group.bench_function(BenchmarkId::new("delta_soa", size_name), |b| {
             b.iter(|| {
                 let mut results = Vec::with_capacity(inputs_soa.len());
                 for i in 0..inputs_soa.len() {
-                    let input = Inputs::new(
-                        inputs_soa.option_types[i],
-                        inputs_soa.spots[i],
-                        inputs_soa.strikes[i],
-                        None,
-                        inputs_soa.rates[i],
-                        inputs_soa.dividends[i],
-                        inputs_soa.times[i],
-                        Some(inputs_soa.volatilities[i]),
+                    let option = quant_opts::VanillaOption {
+                        style: quant_opts::OptionStyle::European,
+                        kind: inputs_soa.option_types[i],
+                        strike: inputs_soa.strikes[i],
+                        maturity: inputs_soa.times[i],
+                    };
+                    let market = quant_opts::MarketData {
+                        spot: inputs_soa.spots[i],
+                        rate: inputs_soa.rates[i],
+                        dividend_yield: inputs_soa.dividends[i],
+                    };
+                    results.push(
+                        BlackScholes::delta(&option, &market, inputs_soa.volatilities[i]).unwrap(),
                     );
-                    results.push(input.calc_delta().unwrap());
                 }
                 black_box(results)
             })

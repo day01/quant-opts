@@ -1,11 +1,11 @@
 use std::{hint::black_box, time::Duration};
 
-use blackscholes::{Greeks, Inputs, OptionType};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use quant_opts::{BlackScholes, OptionType};
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_standard_inputs, Moneyness, TimeToMaturity, VolatilityLevel};
+use common::{generate_standard_inputs, BenchCase, Moneyness, TimeToMaturity, VolatilityLevel};
 
 fn bench_greeks(c: &mut Criterion) {
     let mut group = c.benchmark_group("Single Option Greeks");
@@ -23,7 +23,7 @@ fn bench_greeks(c: &mut Criterion) {
 
     // First-order Greeks (most frequently used)
     for (name, maturity) in configurations.iter() {
-        let inputs = generate_standard_inputs(
+        let case: BenchCase = generate_standard_inputs(
             OptionType::Call,
             Moneyness::AtTheMoney,
             *maturity,
@@ -33,36 +33,56 @@ fn bench_greeks(c: &mut Criterion) {
         // Delta
         group.bench_with_input(
             BenchmarkId::new("delta", name),
-            &inputs,
-            |b, inputs: &Inputs| b.iter(|| black_box(inputs.calc_delta().unwrap())),
+            &case,
+            |b, case: &BenchCase| {
+                b.iter(|| {
+                    black_box(BlackScholes::delta(&case.option, &case.market, case.vol).unwrap())
+                })
+            },
         );
 
         // Gamma
         group.bench_with_input(
             BenchmarkId::new("gamma", name),
-            &inputs,
-            |b, inputs: &Inputs| b.iter(|| black_box(inputs.calc_gamma().unwrap())),
+            &case,
+            |b, case: &BenchCase| {
+                b.iter(|| {
+                    black_box(BlackScholes::gamma(&case.option, &case.market, case.vol).unwrap())
+                })
+            },
         );
 
         // Theta
         group.bench_with_input(
             BenchmarkId::new("theta", name),
-            &inputs,
-            |b, inputs: &Inputs| b.iter(|| black_box(inputs.calc_theta().unwrap())),
+            &case,
+            |b, case: &BenchCase| {
+                b.iter(|| {
+                    black_box(BlackScholes::theta(&case.option, &case.market, case.vol).unwrap())
+                })
+            },
         );
 
         // Vega
         group.bench_with_input(
             BenchmarkId::new("vega", name),
-            &inputs,
-            |b, inputs: &Inputs| b.iter(|| black_box(inputs.calc_vega().unwrap())),
+            &case,
+            |b, case: &BenchCase| {
+                b.iter(|| {
+                    black_box(BlackScholes::vega(&case.option, &case.market, case.vol).unwrap())
+                })
+            },
         );
 
         // Rho
         group.bench_with_input(
             BenchmarkId::new("rho", name),
-            &inputs,
-            |b, inputs: &Inputs| b.iter(|| black_box(inputs.calc_rho().unwrap())),
+            &case,
+            |b, case: &BenchCase| {
+                b.iter(|| {
+                    black_box(BlackScholes::rho(&case.option, &case.market, case.vol).unwrap())
+                })
+            },
         );
     }
 
@@ -77,14 +97,14 @@ fn bench_all_greeks(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(2));
 
     // Compare individual vs. all_greeks calculation for different option types
-    let call_atm = generate_standard_inputs(
+    let call_atm: BenchCase = generate_standard_inputs(
         OptionType::Call,
         Moneyness::AtTheMoney,
         TimeToMaturity::MediumTerm,
         VolatilityLevel::Medium,
     );
 
-    let put_atm = generate_standard_inputs(
+    let put_atm: BenchCase = generate_standard_inputs(
         OptionType::Put,
         Moneyness::AtTheMoney,
         TimeToMaturity::MediumTerm,
@@ -92,17 +112,26 @@ fn bench_all_greeks(c: &mut Criterion) {
     );
 
     // Benchmark each individual Greek calculation separately (sum of times)
-    for (name, inputs) in [("call", call_atm), ("put", put_atm)] {
+    for (name, case) in [("call", call_atm), ("put", put_atm)] {
         group.bench_with_input(
             BenchmarkId::new("individual", name),
-            &inputs,
-            |b, inputs: &Inputs| {
+            &case,
+            |b, case: &BenchCase| {
                 b.iter(|| {
-                    let delta = black_box(inputs.calc_delta().unwrap());
-                    let gamma = black_box(inputs.calc_gamma().unwrap());
-                    let theta = black_box(inputs.calc_theta().unwrap());
-                    let vega = black_box(inputs.calc_vega().unwrap());
-                    let rho = black_box(inputs.calc_rho().unwrap());
+                    let delta = black_box(
+                        BlackScholes::delta(&case.option, &case.market, case.vol).unwrap(),
+                    );
+                    let gamma = black_box(
+                        BlackScholes::gamma(&case.option, &case.market, case.vol).unwrap(),
+                    );
+                    let theta = black_box(
+                        BlackScholes::theta(&case.option, &case.market, case.vol).unwrap(),
+                    );
+                    let vega = black_box(
+                        BlackScholes::vega(&case.option, &case.market, case.vol).unwrap(),
+                    );
+                    let rho =
+                        black_box(BlackScholes::rho(&case.option, &case.market, case.vol).unwrap());
                     black_box((delta, gamma, theta, vega, rho))
                 })
             },
@@ -111,10 +140,12 @@ fn bench_all_greeks(c: &mut Criterion) {
         // Benchmark all_greeks calculation (calculates all at once)
         group.bench_with_input(
             BenchmarkId::new("all_greeks", name),
-            &inputs,
-            |b, inputs: &Inputs| {
+            &case,
+            |b, case: &BenchCase| {
                 b.iter(|| {
-                    let all = black_box(inputs.calc_all_greeks().unwrap());
+                    let all = black_box(
+                        BlackScholes::greeks(&case.option, &case.market, case.vol).unwrap(),
+                    );
                     black_box(all)
                 })
             },
@@ -132,7 +163,7 @@ fn bench_second_order_greeks(c: &mut Criterion) {
     group.warm_up_time(Duration::from_millis(500));
     group.measurement_time(Duration::from_secs(2));
 
-    let inputs = generate_standard_inputs(
+    let case: BenchCase = generate_standard_inputs(
         OptionType::Call,
         Moneyness::AtTheMoney,
         TimeToMaturity::MediumTerm,
@@ -140,23 +171,23 @@ fn bench_second_order_greeks(c: &mut Criterion) {
     );
 
     group.bench_function("vanna", |b| {
-        b.iter(|| black_box(inputs.calc_vanna().unwrap()))
+        b.iter(|| black_box(BlackScholes::vanna(&case.option, &case.market, case.vol).unwrap()))
     });
 
     group.bench_function("charm", |b| {
-        b.iter(|| black_box(inputs.calc_charm().unwrap()))
+        b.iter(|| black_box(BlackScholes::charm(&case.option, &case.market, case.vol).unwrap()))
     });
 
     group.bench_function("vomma", |b| {
-        b.iter(|| black_box(inputs.calc_vomma().unwrap()))
+        b.iter(|| black_box(BlackScholes::vomma(&case.option, &case.market, case.vol).unwrap()))
     });
 
     group.bench_function("speed", |b| {
-        b.iter(|| black_box(inputs.calc_speed().unwrap()))
+        b.iter(|| black_box(BlackScholes::speed(&case.option, &case.market, case.vol).unwrap()))
     });
 
     group.bench_function("zomma", |b| {
-        b.iter(|| black_box(inputs.calc_zomma().unwrap()))
+        b.iter(|| black_box(BlackScholes::zomma(&case.option, &case.market, case.vol).unwrap()))
     });
 
     group.finish();

@@ -1,111 +1,106 @@
-# BlackScholes
-A library providing Black-Scholes option pricing, Greek calculations, and implied-volatility solver.
+## quant-opts (work in progress)
 
-[![Crates.io](https://img.shields.io/crates/v/blackscholes.svg)](https://crates.io/crates/blackscholes)
-[![Documentation](https://docs.rs/blackscholes/badge.svg)](https://docs.rs/blackscholes)
-[![Benchmarks](https://img.shields.io/badge/Benchmarks-GitHub%20Pages-blue)](https://przemyslawolszewski.github.io/bs-rs/)
+A high-performance Rust library for option pricing and risk, starting from a fast Black–Scholes–Merton implementation and evolving towards a more general framework (e.g. SABR and other models).
 
-A Black-Scholes option pricing, Greek calculation, and implied volatility calculation library.
+The current codebase is focused on Black–Scholes for European vanilla options. Over time, `quant-opts` will extend this to a broader set of models and instruments while keeping the API ergonomic and performance-oriented.
 
-The library handles both European and American style options for the following option types:
-- Vanilla Put/Call
-- Binary Put/Call
-- Binary OT Range (In/Out)
-- Barrier
+## Current scope
 
+- Black–Scholes–Merton model
+- European vanilla options (calls and puts) expressed via core types
+  (`VanillaOption`, `MarketData`, `OptionStyle`, `OptionType`)
+- Pricing and Greeks for vanilla options
+- Implied-volatility solvers (including a rational approximation based on
+  Peter Jäckel’s *“Let’s Be Rational”* method)
+- Batch-friendly API and Criterion benchmarks for throughput studies
 
-# Performance Optimization
+## Roadmap (high level)
 
-This library is optimized for both single-option pricing and high-throughput batch processing. We've implemented a comprehensive benchmarking infrastructure to measure and improve performance.
+- Additional models such as SABR and other stochastic-volatility / local-volatility models
+- Extended product coverage beyond plain-vanilla options
+- Unified abstractions for models, products, and numerical methods
+- First-class batch / vectorized pricing workflows
 
-## Key Performance Characteristics
+## Core Rust API
 
-- **Single Option Pricing**: ~35-40 ns per option
-- **Rational Pricing Method**: ~55-65 ns per option
-- **Delta Calculation**: ~30-35 ns per option
-- **Gamma Calculation**: ~14-15 ns per option
-- **Batch Processing**: Scales linearly up to large batch sizes
-- **All Greeks Calculation**: ~2 ms per 1000 options
-
-## Benchmarking Infrastructure
-
-The library includes a comprehensive benchmarking system for performance tracking:
-
-- **Interactive Charts**: Professional benchmark visualizations on [GitHub Pages](https://przemyslawolszewski.github.io/bs-rs/)
-- **Automated Regression Detection**: CI-integrated tests that fail on performance regressions (>10% threshold)
-- **Historical Tracking**: Continuous monitoring of performance trends over time
-- **Pull Request Comments**: Automatic performance comparison comments on PRs
-
-View live benchmark results at: https://przemyslawolszewski.github.io/bs-rs/
-
-## Usage Examples
+The primary way to use `quant-opts` today is via the core types and the
+Black–Scholes model:
 
 ```rust
-use blackscholes::{Inputs, OptionType, Pricing, Greeks, ImpliedVolatility};
+use quant_opts::{
+    BlackScholes, MarketData, OptionStyle, OptionType, VanillaModel, VanillaOption,
+};
 
-// Basic option pricing
-let inputs = Inputs::new(
-    OptionType::Call,   // Call option
-    100.0,              // Spot price
-    100.0,              // Strike price
-    None,               // Option price (not needed for pricing)
-    0.05,               // Risk-free rate
-    0.01,               // Dividend yield
-    1.0,                // Time to maturity (in years)
-    Some(0.2),          // Volatility
-);
-
-// Calculate option price
-let price = inputs.calc_price().unwrap();
-println!("Option price: {}", price);
-
-// Calculate option Greeks
-let delta = inputs.calc_delta().unwrap();
-let gamma = inputs.calc_gamma().unwrap();
-let theta = inputs.calc_theta().unwrap();
-let vega = inputs.calc_vega().unwrap();
-let rho = inputs.calc_rho().unwrap();
-
-println!("Delta: {}, Gamma: {}, Vega: {}", delta, gamma, vega);
-
-// Calculate implied volatility from price
-let mut iv_inputs = Inputs::new(
+let option = VanillaOption::new(
+    OptionStyle::European,
     OptionType::Call,
-    100.0,
-    100.0,
-    Some(10.0),  // Option price
-    0.05,
-    0.01,
-    1.0,
-    None,        // Volatility is what we're solving for
+    100.0,             // strike
+    20.0 / 365.25,     // time to maturity (years)
 );
 
-let iv = iv_inputs.calc_iv(0.0001).unwrap();
-println!("Implied volatility: {}", iv);
+let market = MarketData::new(
+    100.0,  // spot
+    0.05,   // risk-free rate
+    0.01,   // dividend yield
+);
+
+// Direct static API with explicit volatility
+let price = BlackScholes::price(&option, &market, 0.2)?;
+
+// Or via the generic `VanillaModel` trait
+let model = BlackScholes::new(0.2);
+let price_via_trait = model.price(&option, &market)?;
 ```
+
+Error handling uses `Result<_, String>` to propagate issues such as
+non-finite volatility or zero time to maturity.
+
+## Optional wrappers feature
+
+For FFI and quick scripting use cases, you can enable the `wrappers`
+feature to get simple function-style helpers:
+
+```toml
+[dependencies]
+quant-opts = { version = "0.24", features = ["wrappers"] }
+```
+
+```rust
+use quant_opts::{wrappers, OptionType};
+
+let price = wrappers::price_eur_vanilla_bs(
+    OptionType::Call,
+    100.0,           // spot
+    110.0,           // strike
+    20.0 / 365.25,   // maturity (years)
+    0.05,            // risk-free rate
+    0.05,            // dividend yield
+    0.2,             // volatility
+)?;
+```
+
+## Language bindings
+
+Rust is the primary API, but the library is being designed with FFI in mind. Planned bindings include:
+
+- Python
+- WebAssembly (WASM)
+- Other FFI targets where low-latency option pricing is needed
+
+These bindings are part of the roadmap and will be added as the core library stabilizes.
+
+## Performance
+
+This library is written with performance in mind, both for single-option pricing and large batch workloads. The repository already includes Criterion-based benchmarks and throughput studies.
+
+Up-to-date baseline numbers for pricing, Greeks and implied volatility are
+documented in `docs/baseline.md`. The CI and benchmarking setup is described
+in `docs/BENCHMARKING.md`.
+
+## Origin and credits
+
+This project started as a fork of the excellent [`blackscholes`](https://crates.io/crates/blackscholes) crate by [Hayden Rose](https://github.com/hayden4r4). Many thanks for the original implementation and design. The goal of `quant-opts` is to build on that foundation, extending model coverage and abstractions while preserving and further improving performance.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-# blackscholes
-[![Crates.io](https://img.shields.io/crates/v/blackscholes)](https://crates.io/crates/blackscholes)
-[![Docs.rs](https://docs.rs/blackscholes/badge.svg)](https://docs.rs/blackscholes)
-![License](https://img.shields.io/crates/l/blackscholes)
-  
-This library provides a simple, lightweight, and efficient (though not heavily optimized) implementation of the Black-Scholes-Merton model for pricing European options.  
-  
-Includes all first, second, and third order Greeks.  
-
-Implements both:  
-
-- calc_iv() in the ImpliedVolatility trait which uses [Modified Corrado-Miller by Piotr Płuciennik (2007)](https://sin.put.poznan.pl/files/download/37938) for the initial volatility guess and the Newton Raphson algorithm to solve for the implied volatility.
-- calc_rational_iv() in the ImpliedVolatility trait which uses "Let's be rational" method from ["Let's be rational" (2016) by Peter Jackel](http://www.jaeckel.org/LetsBeRational.pdf).  Utilizing Jackel's C++ implementation to get convergence within 2 iterations with 64-bit floating point accuracy.
-  
-## Usage  
-  
-View the [docs](https://docs.rs/blackscholes) for usage and examples.  
-  
-**Other packages available:**  
-Python: [Pypi](https://pypi.org/project/blackscholes-python/)  
-WASM: [npm](https://www.npmjs.com/package/@haydenr4/blackscholes_wasm)  
+This project is licensed under the MIT License – see the `LICENSE.md` file for details.

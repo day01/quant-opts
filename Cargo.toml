@@ -1,17 +1,18 @@
 [package]
-name = "blackscholes"
+name = "quant-opts"
 version = "0.24.0"
 edition = "2021"
 license = "MIT"
-description = "Black-Scholes option pricing model calculator"
-repository = "https://github.com/hayden4r4/blackscholes-rust"
-documentation = "https://docs.rs/blackscholes"
+description = "High-performance Rust library for option pricing and risk"
+repository = "https://github.com/nauron-ai/quant-opts"
+documentation = "https://docs.rs/quant-opts"
 readme = "README.md"
-authors = ["Hayden Rose"]
-keywords = ["finance", "option", "pricing", "blackscholes", "option-pricing"]
+authors = ["Hayden Rose", "Prem Olszewski"]
+keywords = ["finance", "option", "pricing", "blackscholes", "quant", "quant-opts"]
 
 [lib]
 bench = false
+doctest = false
 
 [profile.release]
 codegen-units = 1
@@ -24,25 +25,33 @@ opt-level = 3
 panic = "abort"
 
 
+[features]
+default = []
+wrappers = []
+lets-be-rational-validation = []
+visualize-bench = ["plotters"]
+
 [dev-dependencies]
 approx = "0.5.1"
 assert_approx_eq = "1.1.0"
-criterion = { version = "0.6.0", features = ["html_reports"] }
+criterion = { version = "0.6.0", default-features = false }
 proptest = "1.5.0"
 rand = { version = "0.8.5", default-features = false }
-plotters = "0.3"
 indicatif = "0.17"
 
 [dependencies]
 num-traits = "0.2.19"
 statrs = "0.17.1"
+plotters = { version = "0.3", optional = true }
 
 [target.wasm32-unknown-unknown.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
 
-#[[bench]]
-#name = "black"
-#harness = false
+[[bench]]
+name = "black"
+path = "validation/black.rs"
+harness = false
+required-features = ["lets-be-rational-validation"]
 
 # Benchmarks
 [[bench]]
@@ -96,6 +105,7 @@ harness = false
 name = "visualize"
 path = "benches/throughput/visualize.rs"
 harness = false
+required-features = ["visualize-bench"]
 
 [[bench]]
 name = "batch_size_study"

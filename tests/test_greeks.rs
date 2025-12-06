@@ -1,23 +1,21 @@
 #[cfg(test)]
 mod tests {
-    use blackscholes::{Greeks, Inputs, OptionType};
+    use quant_opts::{BlackScholes, MarketData, OptionStyle, OptionType, VanillaOption};
 
     #[test]
     fn test_calc_delta_zero_stock_price() {
         // arrange
-        let option_type = OptionType::Call;
-        let s = 0.0; // extreme value
-        let k = 100.0;
-        let p = None;
-        let r = 0.05;
-        let q = 0.0;
-        let sigma = Some(0.2);
-        let t = 20.0 / 365.25;
-
-        let inputs = Inputs::new(option_type, s, k, p, r, q, t, sigma);
+        let option = VanillaOption::new(
+            OptionStyle::European,
+            OptionType::Call,
+            100.0,
+            20.0 / 365.25,
+        );
+        let market = MarketData::new(0.0, 0.05, 0.0); // extreme value: spot = 0
+        let sigma = 0.2;
 
         // act
-        let result = inputs.calc_delta();
+        let result = BlackScholes::delta(&option, &market, sigma);
 
         // assert
         assert!(result.is_err());
@@ -26,19 +24,17 @@ mod tests {
     #[test]
     fn test_calc_delta_zero_strike_price() {
         // arrange
-        let option_type = OptionType::Call;
-        let s = 100.0;
-        let k = 0.0;
-        let p = None;
-        let r = 0.05;
-        let q = 0.0;
-        let sigma = Some(0.2);
-        let t = 20.0 / 365.25;
-
-        let inputs = Inputs::new(option_type, s, k, p, r, q, t, sigma);
+        let option = VanillaOption::new(
+            OptionStyle::European,
+            OptionType::Call,
+            0.0, // extreme value: strike = 0
+            20.0 / 365.25,
+        );
+        let market = MarketData::new(100.0, 0.05, 0.0);
+        let sigma = 0.2;
 
         // act
-        let result = inputs.calc_delta();
+        let result = BlackScholes::delta(&option, &market, sigma);
 
         // assert
         assert!(result.is_err());
@@ -47,19 +43,17 @@ mod tests {
     #[test]
     fn test_calc_delta_zero_risk_free_rate() {
         // arrange
-        let option_type = OptionType::Call;
-        let s = 100.0;
-        let k = 100.0;
-        let p = None;
-        let r = 0.0; // extreme value
-        let q = 0.0;
-        let sigma = Some(0.2);
-        let t = 20.0 / 365.25;
-
-        let inputs = Inputs::new(option_type, s, k, p, r, q, t, sigma);
+        let option = VanillaOption::new(
+            OptionStyle::European,
+            OptionType::Call,
+            100.0,
+            20.0 / 365.25,
+        );
+        let market = MarketData::new(100.0, 0.0, 0.0); // extreme value: r = 0
+        let sigma = 0.2;
 
         // act
-        let result = inputs.calc_delta();
+        let result = BlackScholes::delta(&option, &market, sigma);
 
         // assert
         assert!(result.is_ok());
@@ -68,19 +62,17 @@ mod tests {
     #[test]
     fn test_calc_delta_none_volatility() {
         // arrange
-        let option_type = OptionType::Call;
-        let s = 100.0;
-        let k = 100.0;
-        let p = None;
-        let r = 0.05;
-        let q = 0.0;
-        let sigma = None; // extreme value
-        let t = 20.0 / 365.25;
-
-        let inputs = Inputs::new(option_type, s, k, p, r, q, t, sigma);
+        let option = VanillaOption::new(
+            OptionStyle::European,
+            OptionType::Call,
+            100.0,
+            20.0 / 365.25,
+        );
+        let market = MarketData::new(100.0, 0.05, 0.0);
+        let sigma = f64::NAN; // extreme value
 
         // act
-        let result = inputs.calc_delta();
+        let result = BlackScholes::delta(&option, &market, sigma);
 
         // assert
         assert!(result.is_err());
@@ -89,19 +81,17 @@ mod tests {
     #[test]
     fn test_calc_delta_zero_time_to_maturity() {
         // arrange
-        let option_type = OptionType::Call;
-        let s = 100.0;
-        let k = 100.0;
-        let p = None;
-        let r = 0.05;
-        let q = 0.0;
-        let sigma = Some(0.2);
-        let t = 0.0; // extreme value
-
-        let inputs = Inputs::new(option_type, s, k, p, r, q, t, sigma);
+        let option = VanillaOption::new(
+            OptionStyle::European,
+            OptionType::Call,
+            100.0,
+            0.0, // extreme value
+        );
+        let market = MarketData::new(100.0, 0.05, 0.0);
+        let sigma = 0.2;
 
         // act
-        let result = inputs.calc_delta();
+        let result = BlackScholes::delta(&option, &market, sigma);
 
         // assert
         assert!(result.is_err());

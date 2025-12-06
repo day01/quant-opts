@@ -1,12 +1,12 @@
 use std::{hint::black_box, time::Duration};
 
-use blackscholes::{Greeks, Inputs, Pricing};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use quant_opts::BlackScholes;
 use rand::thread_rng;
 
 #[path = "../common/mod.rs"]
 mod common;
-use common::{generate_random_inputs, BatchSize};
+use common::{generate_random_inputs, BatchSize, BenchCase};
 
 fn bench_batch_size_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("Batch Size Scaling");
@@ -25,18 +25,20 @@ fn bench_batch_size_scaling(c: &mut Criterion) {
     let mut rng = thread_rng();
 
     for size in batch_sizes {
-        let inputs = generate_random_inputs(size, &mut rng);
+        let inputs: Vec<BenchCase> = generate_random_inputs(size, &mut rng);
 
         group.throughput(Throughput::Elements(size as u64));
 
         group.bench_with_input(
             BenchmarkId::new("standard_price", size),
             &inputs,
-            |b, inputs| {
+            |b, inputs: &Vec<BenchCase>| {
                 b.iter(|| {
                     let mut results = Vec::with_capacity(inputs.len());
                     for input in black_box(inputs) {
-                        results.push(input.calc_price().unwrap());
+                        results.push(
+                            BlackScholes::price(&input.option, &input.market, input.vol).unwrap(),
+                        );
                     }
                     black_box(results)
                 })
@@ -46,45 +48,62 @@ fn bench_batch_size_scaling(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("rational_price", size),
             &inputs,
-            |b, inputs| {
+            |b, inputs: &Vec<BenchCase>| {
                 b.iter(|| {
                     let mut results = Vec::with_capacity(inputs.len());
                     for input in black_box(inputs) {
-                        results.push(input.calc_rational_price().unwrap());
+                        results.push(
+                            BlackScholes::rational_price(&input.option, &input.market, input.vol)
+                                .unwrap(),
+                        );
                     }
                     black_box(results)
                 })
             },
         );
 
-        group.bench_with_input(BenchmarkId::new("delta", size), &inputs, |b, inputs| {
-            b.iter(|| {
-                let mut results = Vec::with_capacity(inputs.len());
-                for input in black_box(inputs) {
-                    results.push(input.calc_delta().unwrap());
-                }
-                black_box(results)
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::new("delta", size),
+            &inputs,
+            |b, inputs: &Vec<BenchCase>| {
+                b.iter(|| {
+                    let mut results = Vec::with_capacity(inputs.len());
+                    for input in black_box(inputs) {
+                        results.push(
+                            BlackScholes::delta(&input.option, &input.market, input.vol).unwrap(),
+                        );
+                    }
+                    black_box(results)
+                })
+            },
+        );
 
-        group.bench_with_input(BenchmarkId::new("gamma", size), &inputs, |b, inputs| {
-            b.iter(|| {
-                let mut results = Vec::with_capacity(inputs.len());
-                for input in black_box(inputs) {
-                    results.push(input.calc_gamma().unwrap());
-                }
-                black_box(results)
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::new("gamma", size),
+            &inputs,
+            |b, inputs: &Vec<BenchCase>| {
+                b.iter(|| {
+                    let mut results = Vec::with_capacity(inputs.len());
+                    for input in black_box(inputs) {
+                        results.push(
+                            BlackScholes::gamma(&input.option, &input.market, input.vol).unwrap(),
+                        );
+                    }
+                    black_box(results)
+                })
+            },
+        );
 
         group.bench_with_input(
             BenchmarkId::new("all_greeks", size),
             &inputs,
-            |b, inputs| {
+            |b, inputs: &Vec<BenchCase>| {
                 b.iter(|| {
                     let mut results = Vec::with_capacity(inputs.len());
                     for input in black_box(inputs) {
-                        results.push(input.calc_all_greeks().unwrap());
+                        results.push(
+                            BlackScholes::greeks(&input.option, &input.market, input.vol).unwrap(),
+                        );
                     }
                     black_box(results)
                 })
