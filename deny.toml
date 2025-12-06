@@ -1,4 +1,6 @@
 [licenses]
+version = 2
+confidence-threshold = 0.8
 allow = [
     "MIT",
     "Apache-2.0",
@@ -8,7 +10,4 @@ allow = [
     "Zlib",
     "MPL-2.0",
 ]
-allow-osi-fsf-free = "either"
-copyleft = "warn"
-unlicensed = "warn"
-confidence-threshold = 0.8
+unused-allowed-license = "warn"
