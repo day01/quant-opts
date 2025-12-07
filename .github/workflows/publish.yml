@@ -61,8 +61,10 @@ jobs:
       - name: Publish npm package (bundler+web)
         working-directory: target/wasm/pkg-react
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          npm publish --access public --provenance
 
       - name: Login to crates.io
         env:
