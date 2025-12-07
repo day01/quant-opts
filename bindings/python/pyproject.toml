@@ -6,7 +6,7 @@ build-backend = "maturin"
 name = "quant-opts"
 version = "0.1.0"
 description = "Python bindings for quant-opts"
-readme = "../../README.md"
+readme = "python-README.md"
 license = { file = "../../LICENSE.md" }
 authors = [
   { name = "Prem Olszewski" },
