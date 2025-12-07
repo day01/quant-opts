@@ -7,7 +7,7 @@ name = "quant-opts"
 version = "0.1.0"
 description = "Python bindings for quant-opts"
 readme = "python-README.md"
-license = { file = "../../LICENSE.md" }
+license = { text = "MIT" }
 authors = [
   { name = "Prem Olszewski" },
   { name = "Hayden Rose" }
