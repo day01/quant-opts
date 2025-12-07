@@ -169,7 +169,7 @@ jobs:
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             maturin build --release -m bindings/python/Cargo.toml --skip-auditwheel
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            maturin build --release -m bindings/python/Cargo.toml --universal2
+            maturin build --release -m bindings/python/Cargo.toml
           else
             maturin build --release -m bindings/python/Cargo.toml
           fi
