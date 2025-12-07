@@ -163,9 +163,16 @@ jobs:
       - name: Install maturin
         run: |
           pip install --upgrade pip maturin
-      - name: Build wheel
+      - name: Build wheel (platform-specific)
+        shell: bash
         run: |
-          maturin build --release -m bindings/python/Cargo.toml --skip-auditwheel
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            maturin build --release -m bindings/python/Cargo.toml --manylinux 2014
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            maturin build --release -m bindings/python/Cargo.toml --universal2
+          else
+            maturin build --release -m bindings/python/Cargo.toml
+          fi
       - name: Install built wheel and run CLI example
         run: |
           python - <<'PY'
