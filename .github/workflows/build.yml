@@ -111,28 +111,16 @@ jobs:
         uses: dtolnay/rust-toolchain@1.91.1
         with:
           targets: wasm32-unknown-unknown
+      - name: Install Rust stable for WASI
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasi
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
       - name: Build wasm bindings (web + bundler)
         run: make wasm-bindings
-      - name: Ensure wasm32-wasi target (fallback to stable if missing)
-        id: wasi_target
-        run: |
-          set -e
-          if rustup target add wasm32-wasi --toolchain 1.91.1; then
-            echo "wasi_toolchain=1.91.1" >> "$GITHUB_OUTPUT"
-            echo "skip_wasi=false" >> "$GITHUB_OUTPUT"
-          elif rustup toolchain install stable --target wasm32-wasi; then
-            echo "wasi_toolchain=stable" >> "$GITHUB_OUTPUT"
-            echo "skip_wasi=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip_wasi=true" >> "$GITHUB_OUTPUT"
-            echo "wasi_toolchain=stable" >> "$GITHUB_OUTPUT"
-            echo "Skipping wasm32-wasi build (target unavailable)"
-          fi
-      - name: Build WASI CLI example
-        if: steps.wasi_target.outputs.skip_wasi != 'true'
-        run: cargo +${{ steps.wasi_target.outputs.wasi_toolchain }} build --target wasm32-wasi --example wasm_cli --verbose
+      - name: Build WASI CLI example (stable toolchain)
+        run: cargo +stable build --target wasm32-wasi --example wasm_cli --verbose
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
