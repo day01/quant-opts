@@ -115,8 +115,16 @@ jobs:
         uses: jetli/wasm-pack-action@v0.4.0
       - name: Build wasm bindings (web + bundler)
         run: make wasm-bindings
+      - name: Ensure wasm32-wasi target (fallback to stable if missing)
+        run: |
+          if rustup target add wasm32-wasi --toolchain 1.91.1; then
+            echo "WASI_TOOLCHAIN=1.91.1" >> $GITHUB_ENV
+          else
+            rustup toolchain install stable --target wasm32-wasi
+            echo "WASI_TOOLCHAIN=stable" >> $GITHUB_ENV
+          fi
       - name: Build WASI CLI example
-        run: cargo build --target wasm32-wasi --example wasm_cli --verbose
+        run: cargo +${{ env.WASI_TOOLCHAIN }} build --target wasm32-wasi --example wasm_cli --verbose
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -136,6 +144,45 @@ jobs:
           pip install --upgrade pip maturin
           maturin develop --release -m bindings/python/pyproject.toml
           python examples/python_cli/main.py
+
+  python-wheels:
+    runs-on: ${{ matrix.os }}
+    needs: tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@1.91.1
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install maturin
+        run: |
+          pip install --upgrade pip maturin
+      - name: Build wheel
+        run: |
+          maturin build --release -m bindings/python/Cargo.toml --skip-auditwheel
+      - name: Install built wheel and run CLI example
+        run: |
+          python - <<'PY'
+          import glob, subprocess, sys
+          wheels = glob.glob('bindings/python/target/wheels/*.whl')
+          if not wheels:
+            raise SystemExit("No wheels produced")
+          wheel = wheels[0]
+          subprocess.check_call([sys.executable, "-m", "pip", "install", wheel])
+          subprocess.check_call([sys.executable, "examples/python_cli/main.py"])
+          PY
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheel-${{ matrix.os }}
+          path: bindings/python/target/wheels/*.whl
+          retention-days: 7
 
   security_audit:
     runs-on: ubuntu-latest
