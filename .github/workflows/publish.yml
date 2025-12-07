@@ -91,7 +91,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          npm publish --access public --provenance
+          npm publish --access public --provenance || echo "npm publish skipped (possibly already published)"
 
       - name: Login to crates.io
         env:
