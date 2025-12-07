@@ -54,7 +54,12 @@ mod wasm_api {
         dividend_yield: f64,
         vol: f64,
     ) -> Result<f64, JsValue> {
-        let opt = VanillaOption::new(OptionStyle::European, OptionType::Call, strike, maturity_years);
+        let opt = VanillaOption::new(
+            OptionStyle::European,
+            OptionType::Call,
+            strike,
+            maturity_years,
+        );
         let mkt = MarketData::new(spot, rate, dividend_yield);
         BlackScholes::price(&opt, &mkt, vol).map_err(|e| JsValue::from_str(&e))
     }
@@ -69,9 +74,15 @@ mod wasm_api {
         rate: f64,
         dividend_yield: f64,
     ) -> Result<f64, JsValue> {
-        let opt = VanillaOption::new(OptionStyle::European, OptionType::Call, strike, maturity_years);
+        let opt = VanillaOption::new(
+            OptionStyle::European,
+            OptionType::Call,
+            strike,
+            maturity_years,
+        );
         let mkt = MarketData::new(spot, rate, dividend_yield);
-        BlackScholes::rational_implied_vol(observed_price, &opt, &mkt).map_err(|e| JsValue::from_str(&e))
+        BlackScholes::rational_implied_vol(observed_price, &opt, &mkt)
+            .map_err(|e| JsValue::from_str(&e))
     }
 }
 
