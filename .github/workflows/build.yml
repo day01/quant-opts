@@ -174,16 +174,15 @@ jobs:
             maturin build --release -m bindings/python/Cargo.toml
           fi
       - name: Install built wheel and run CLI example
+        shell: bash
         run: |
-          python - <<'PY'
-          import glob, subprocess, sys
-          wheels = glob.glob('bindings/python/target/wheels/*.whl')
-          if not wheels:
-            raise SystemExit("No wheels produced")
-          wheel = wheels[0]
-          subprocess.check_call([sys.executable, "-m", "pip", "install", wheel])
-          subprocess.check_call([sys.executable, "examples/python_cli/main.py"])
-          PY
+          set -euo pipefail
+          wheel=$(ls bindings/python/target/wheels/*.whl | head -n1)
+          if [[ -z "$wheel" ]]; then
+            echo "No wheels produced"; exit 1
+          fi
+          python -m pip install "$wheel"
+          python examples/python_cli/main.py
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
         with:
