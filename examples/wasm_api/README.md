@@ -4,7 +4,7 @@ Build bindings (web + node):
 
 ```bash
 rustup target add wasm32-unknown-unknown
-cargo build --target wasm32-unknown-unknown --example wasm_api --features wasm-example
+cargo build --target wasm32-unknown-unknown --example wasm_api
 
 wasm-bindgen --target web --out-dir examples/wasm/pkg \
   target/wasm32-unknown-unknown/debug/examples/wasm_api.wasm

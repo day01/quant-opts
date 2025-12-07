@@ -38,6 +38,43 @@ pub use models::{VanillaModel, black_scholes::BlackScholes};
 #[cfg(feature = "wrappers")]
 pub mod wrappers;
 
+#[cfg(target_arch = "wasm32")]
+mod wasm_api {
+    use wasm_bindgen::prelude::*;
+
+    use crate::{BlackScholes, MarketData, OptionStyle, OptionType, VanillaOption};
+
+    /// Price a European call via Black–Scholes (WASM binding).
+    #[wasm_bindgen]
+    pub fn price_call_bs(
+        spot: f64,
+        strike: f64,
+        maturity_years: f64,
+        rate: f64,
+        dividend_yield: f64,
+        vol: f64,
+    ) -> Result<f64, JsValue> {
+        let opt = VanillaOption::new(OptionStyle::European, OptionType::Call, strike, maturity_years);
+        let mkt = MarketData::new(spot, rate, dividend_yield);
+        BlackScholes::price(&opt, &mkt, vol).map_err(|e| JsValue::from_str(&e))
+    }
+
+    /// Dividend-adjusted rational implied volatility for a call.
+    #[wasm_bindgen]
+    pub fn rational_iv_bs(
+        observed_price: f64,
+        spot: f64,
+        strike: f64,
+        maturity_years: f64,
+        rate: f64,
+        dividend_yield: f64,
+    ) -> Result<f64, JsValue> {
+        let opt = VanillaOption::new(OptionStyle::European, OptionType::Call, strike, maturity_years);
+        let mkt = MarketData::new(spot, rate, dividend_yield);
+        BlackScholes::rational_implied_vol(observed_price, &opt, &mkt).map_err(|e| JsValue::from_str(&e))
+    }
+}
+
 pub(crate) const DAYS_PER_YEAR: f64 = 365.25;
 
 pub(crate) const A: f64 = 4.626_275_3e-1;

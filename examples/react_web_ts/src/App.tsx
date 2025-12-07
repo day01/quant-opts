@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import init, { price_call_bs } from 'quant-opts';
+import { price_call_bs } from 'quant-opts';
 
 export default function App() {
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(true);
   const [spot, setSpot] = useState(105);
   const [strike, setStrike] = useState(100);
   const [mat, setMat] = useState(0.25);
@@ -12,12 +12,7 @@ export default function App() {
   const [output, setOutput] = useState<string>('Loading WASM…');
 
   useEffect(() => {
-    init()
-      .then(() => {
-        setReady(true);
-        setOutput('WASM loaded.');
-      })
-      .catch((err) => setOutput(`Error loading WASM: ${err}`));
+    setOutput('WASM loaded.');
   }, []);
 
   const onSubmit = (e: React.FormEvent) => {

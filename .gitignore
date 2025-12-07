@@ -8,3 +8,5 @@ examples/wasm/pkg-node/
 examples/vanilla_web_js/pkg-web/
 examples/react_web_ts/pkg-react/
 examples/react_web_ts/node_modules/
+node_modules/
+examples/react_web_ts/dist/
