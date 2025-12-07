@@ -9,7 +9,7 @@ repository = "https://github.com/day01/quant-opts"
 documentation = "https://docs.rs/quant-opts"
 readme = "README.md"
 authors = ["Hayden Rose", "Prem Olszewski"]
-keywords = ["finance", "option", "pricing", "blackscholes", "quant", "quant-opts"]
+keywords = ["finance", "option", "pricing", "blackscholes", "quant"]
 
 [lib]
 bench = false
