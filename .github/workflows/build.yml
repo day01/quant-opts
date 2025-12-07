@@ -137,6 +137,8 @@ jobs:
           python-version: '3.11'
       - name: Python bindings (maturin develop + example)
         run: |
+          python -m venv .venv
+          source .venv/bin/activate
           pip install --upgrade pip maturin
           maturin develop --release -m bindings/python/pyproject.toml
           python examples/python_cli/main.py
