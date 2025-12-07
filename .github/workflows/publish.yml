@@ -14,6 +14,9 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v6
       - name: Install system deps
@@ -28,6 +31,16 @@ jobs:
 
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install maturin
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip maturin
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -57,6 +70,16 @@ jobs:
 
       - name: Build wasm bindings (web + bundler)
         run: make wasm-bindings
+
+      - name: Build Python distributions (wheel + sdist)
+        run: |
+          source .venv/bin/activate
+          maturin build --release --sdist -m bindings/python/Cargo.toml --out dist
+
+      - name: Publish to PyPI (trusted publisher)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
 
       - name: Publish npm package (bundler+web)
         working-directory: target/wasm/pkg-react
