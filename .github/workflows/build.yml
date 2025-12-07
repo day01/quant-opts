@@ -114,13 +114,13 @@ jobs:
       - name: Install Rust stable for WASI
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-wasi
+          targets: wasm32-wasip1
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
       - name: Build wasm bindings (web + bundler)
         run: make wasm-bindings
       - name: Build WASI CLI example (stable toolchain)
-        run: cargo +stable build --target wasm32-wasi --example wasm_cli --verbose
+        run: cargo +stable build --target wasm32-wasip1 --example wasm_cli --verbose
       - name: Setup Node
         uses: actions/setup-node@v4
         with:

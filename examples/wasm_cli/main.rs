@@ -1,6 +1,6 @@
-//! Minimal CLI compiled to WebAssembly (wasi) for pricing/IV.
-//! Build: `cargo build --target wasm32-wasi --example wasm_cli`
-//! Run (wasmtime): `wasmtime target/wasm32-wasi/debug/examples/wasm_cli.wasm price --spot 105 --strike 100 --mat 0.25 --rate 0.03 --div 0.01 --vol 0.22`
+//! Minimal CLI compiled to WebAssembly (WASI preview1) for pricing/IV.
+//! Build: `cargo build --target wasm32-wasip1 --example wasm_cli`
+//! Run (wasmtime): `wasmtime target/wasm32-wasip1/debug/examples/wasm_cli.wasm price --spot 105 --strike 100 --mat 0.25 --rate 0.03 --div 0.01 --vol 0.22`
 
 use quant_opts::{BlackScholes, MarketData, OptionStyle, OptionType, VanillaOption};
 
