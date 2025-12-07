@@ -81,6 +81,9 @@ jobs:
         with:
           packages-dir: dist
 
+      - name: Clean PyPI temp artifacts
+        run: rm -rf .github/.tmp
+
       - name: Publish npm package (bundler+web)
         working-directory: target/wasm/pkg-react
         env:
@@ -97,7 +100,7 @@ jobs:
       - name: Publish crate
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
-        run: cargo publish --verbose
+        run: cargo publish --verbose --allow-dirty
 
       - name: Commit and tag
         run: |
