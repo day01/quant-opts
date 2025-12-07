@@ -64,7 +64,6 @@ required-features = ["lets-be-rational-validation"]
 [[example]]
 name = "wasm_api"
 path = "examples/wasm_api/main.rs"
-required-features = ["wasm-example"]
 
 # Benchmarks
 [[bench]]
