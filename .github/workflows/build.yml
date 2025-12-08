@@ -132,7 +132,7 @@ jobs:
           npm install --no-package-lock
           npm run build
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       - name: Python bindings (maturin develop + example)
@@ -155,7 +155,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@1.91.1
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       - name: Install maturin
