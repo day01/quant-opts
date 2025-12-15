@@ -93,7 +93,7 @@ jobs:
       - name: Build wasm bindings (web + bundler)
         run: make wasm-bindings
       - name: Upload wasm artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wasm-bindings
           path: |
@@ -182,7 +182,7 @@ jobs:
           python -m pip install "$wheel"
           python examples/python_cli/main.py
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: python-wheel-${{ matrix.os }}
           path: bindings/python/target/wheels/*.whl
@@ -239,7 +239,7 @@ jobs:
           format: markdown
           output: both
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-lcov
           path: |
