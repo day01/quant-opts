@@ -122,7 +122,7 @@ jobs:
       - name: Build WASI CLI example (stable toolchain)
         run: cargo +stable build --target wasm32-wasip1 --example wasm_cli --verbose
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
