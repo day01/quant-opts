@@ -12,3 +12,13 @@ node_modules/
 examples/react_web_ts/dist/
 .venv/
 dist/
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.dll
+*.dylib
+
+# Python binding build outputs
+bindings/python/target/
