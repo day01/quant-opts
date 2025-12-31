@@ -2,7 +2,7 @@
 name = "quant-opts"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.91.1"
+rust-version = "1.92.0"
 license = "MIT"
 description = "High-performance Rust library for option pricing and risk"
 repository = "https://github.com/day01/quant-opts"

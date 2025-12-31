@@ -133,6 +133,6 @@ This project started as a fork of the excellent [`blackscholes`](https://crates.
 ## Metadata
 
 - Edition: 2024
-- MSRV: 1.91.1 (Rust toolchain pinned in `rust-toolchain.toml`)
+- MSRV: 1.92.0 (Rust toolchain pinned in `rust-toolchain.toml`)
 - License: MIT (see `LICENSE.md`)
 - Changelog: see `CHANGELOG.md`
