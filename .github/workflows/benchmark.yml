@@ -26,6 +26,7 @@ jobs:
     
     # Minimal permissions for security
     permissions:
+      contents: read        # Allow checkout
       pull-requests: write   # Allow PR commenting
     
     steps:
