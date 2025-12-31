@@ -1,6 +1,6 @@
 [package]
 name = "quant-opts"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
 rust-version = "1.91.1"
 license = "MIT"
@@ -36,7 +36,7 @@ visualize-bench = ["plotters"]
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 approx = "0.5.1"
 assert_approx_eq = "1.1.0"
-criterion = { version = "0.8.0", default-features = false }
+criterion = { version = "0.8.1", default-features = false }
 proptest = "1.9.0"
 rand = { version = "0.9.2", default-features = false, features = ["thread_rng"] }
 indicatif = "0.18"

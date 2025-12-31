@@ -33,7 +33,7 @@ jobs:
         uses: jetli/wasm-pack-action@v0.4.0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       - name: Install maturin
@@ -43,7 +43,7 @@ jobs:
           pip install --upgrade pip maturin
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
